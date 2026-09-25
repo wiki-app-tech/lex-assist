@@ -1,0 +1,65 @@
+# ==============================================================================
+# Ingest Configuration: Boletín Oficial de Tierra del Fuego, AeIAS
+# ==============================================================================
+id: "ar-tdf-boletin-oficial"
+name: "Boletín Oficial de Tierra del Fuego"
+jurisdiction: "AR-V" # ISO 3166-2:AR para Tierra del Fuego
+base_url: "https://boletinoficial.tierradelfuego.gob.ar"
+fallback_url: "https://decoley.tierradelfuego.gob.ar"
+
+schedule:
+  frequency: "daily"
+  cron: "0 7 * * 1-5" # Lunes a viernes a las 07:00 (hora local de Ushuaia)
+  timezone: "America/Argentina/Ushuaia"
+
+rate_limit:
+  requests_per_second: 1.0
+  delay_seconds: 1.5
+  max_retries: 3
+  retry_backoff: 2.0
+  timeout_seconds: 30
+
+client:
+  user_agent: "lex-assist-bot/0.1 (+https://github.com/wiki-app-tech/lex-assist)"
+  headers:
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,application/pdf,*/*;q=0.8"
+    Accept-Language: "es-AR,es;q=0.9,en;q=0.8"
+
+# Categorías a extraer
+categories:
+  - id: "decretos"
+    name: "Decretos"
+    description: "Decretos del Poder Ejecutivo Provincial de Tierra del Fuego"
+    url_path: "/decretos"
+    keywords: ["decreto", "dto"]
+    file_types: ["pdf", "html"]
+
+  - id: "resoluciones"
+    name: "Resoluciones"
+    description: "Resoluciones ministeriales y de entes autárquicos/descentralizados"
+    url_path: "/resoluciones"
+    keywords: ["resolucion", "res"]
+    file_types: ["pdf", "html"]
+
+  - id: "leyes"
+    name: "Leyes"
+    description: "Leyes provinciales promulgadas y publicadas"
+    url_path: "/leyes"
+    keywords: ["ley", "ley provincial"]
+    file_types: ["pdf", "html"]
+
+  - id: "licitaciones"
+    name: "Licitaciones"
+    description: "Edictos de compras, contrataciones y licitaciones públicas"
+    url_path: "/licitaciones"
+    keywords: ["licitacion", "concurso", "contratacion", "edicto"]
+    file_types: ["pdf", "html"]
+
+# Selectores CSS y patrones de extracción
+selectors:
+  edition_list: "table.boletines tbody tr, .listado-ediciones .item-edicion, article.edicion-card"
+  edition_date: ".fecha, td.col-fecha, time, span.date"
+  edition_number: ".numero, td.col-numero, span.numero-edicion"
+  edition_link: "a[href*='.pdf'], a[href*='download'], a.link-boletin"
+  document_section: "section.categoria, div.seccion-norma, div.contenido-edicion"
+  document_item: ".norma-item, .articulo-item, p.acto-administrativo"

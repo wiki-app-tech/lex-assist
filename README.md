@@ -14,6 +14,22 @@
 - 🌐 Multi-fuente: Boletín Oficial TDF, Legislatura, Tribunal de Cuentas, etc.
 - 🔗 Trazabilidad: cada resumen cita su fuente original.
 
+## 🏗️ Arquitectura
+
+```mermaid
+flowchart LR
+    A[Fuentes oficiales TDF] --> B[Ingesta]
+    B --> C[Normalización]
+    C --> D[(Postgres)]
+    C --> E[(Qdrant)]
+    E --> F[API FastAPI]
+    D --> F
+    F --> G[UI Next.js]
+    F --> H[Alertas]
+    E --> I[LLM Resumen]
+    I --> D
+```
+
 ## 🚀 Inicio rápido
 
 ```bash

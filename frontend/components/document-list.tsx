@@ -17,6 +17,7 @@ export interface DocumentItem {
     | "resoluciones"
     | "leyes"
     | "licitaciones"
+    | "boletin_drive"
     | "biblioteca_libros"
     | "biblioteca_doctrina"
     | "biblioteca_revistas"
@@ -36,7 +37,7 @@ export interface DocumentItem {
   branch?: string;
   kohaBiblionumber?: string;
   subjects?: string[];
-  sourceType?: "boletin" | "biblioteca_pj";
+  sourceType?: "boletin" | "biblioteca_pj" | "boletin_drive";
 }
 
 interface DocumentListProps {
@@ -60,6 +61,8 @@ export function DocumentList({
     switch (selectedCategory) {
       case "todos":
         return "Todas las fuentes";
+      case "boletin_drive":
+        return "Boletines Oficiales (Drive)";
       case "biblioteca":
         return "Biblioteca Judicial (Todos)";
       case "biblioteca_libros":
@@ -76,6 +79,7 @@ export function DocumentList({
   };
 
   const getBadgeVariant = (category: string) => {
+    if (category === "boletin_drive") return "drive";
     if (category.startsWith("biblioteca_")) {
       const sub = category.replace("biblioteca_", "");
       if (sub === "libros") return "libro";

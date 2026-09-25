@@ -1,0 +1,52 @@
+# ==============================================================================
+# Ingest Configuration: Boletines Oficiales de Tierra del Fuego (Google Drive)
+# Repositorio público de ediciones históricas y recientes en PDF
+# ==============================================================================
+id: "ar-tdf-boletin-drive"
+name: "Boletines Oficiales (Drive)"
+description: "Ediciones oficiales completas descargadas desde la carpeta pública de Google Drive"
+jurisdiction: "AR-V" # ISO 3166-2:AR para Tierra del Fuego
+folder_url: "https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6"
+folder_id: "12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6"
+base_url: "https://drive.google.com"
+parser_type: "pdf_drive_whoosh"
+
+schedule:
+  frequency: "daily"
+  cron: "0 5 * * *" # Diariamente a las 05:00 hs (hora local de Ushuaia)
+  timezone: "America/Argentina/Ushuaia"
+
+storage:
+  download_dir: "data/boletines_drive"
+  whoosh_index_dir: "data/indexes/whoosh_boletines"
+
+database:
+  table_name: "boletines_drive"
+  auto_migrate: true
+
+parser:
+  engine: "pymupdf" # PyMuPDF (fitz)
+  chunk_by_pages: false
+  extract_metadata: true
+  patterns:
+    edition_number: '(?i)(?:bolet[ií]n\s+oficial\s+(?:n[°ºo\.]*|número\s+)?|b\.?\s*o\.?\s*n[°ºo\.]*)\s*(\d+)'
+    date: '(?i)(\d{1,2})\s+de\s+(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre)\s+de\s+(\d{4})'
+    decreto: '(?i)decreto\s+n[°ºo\.]*\s*(\d+(?:[/-]\d+)?)'
+    resolucion: '(?i)resoluci[oó]n\s+n[°ºo\.]*\s*(\d+(?:[/-]\d+)?)'
+    ley: '(?i)ley\s+n[°ºo\.]*\s*(\d+)'
+
+search_engine:
+  type: "whoosh"
+  language: "es"
+  stemming: true
+  min_term_length: 3
+  fields:
+    id: "ID(stored=True, unique=True)"
+    filename: "TEXT(stored=True)"
+    edition_number: "TEXT(stored=True)"
+    date: "TEXT(stored=True)"
+    title: "TEXT(stored=True)"
+    content: "TEXT(stored=True)"
+    file_path: "STORED"
+    source_url: "STORED"
+    created_at: "DATETIME(stored=True)"

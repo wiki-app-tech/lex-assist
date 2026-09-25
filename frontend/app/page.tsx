@@ -471,6 +471,100 @@ DIRECTIVAS CENTRALES:
 - Recepción de la denuncia con estricta reserva de identidad.
 - Plazo máximo de 24 horas para la fijación de medidas de protección cautelar por parte del juez de turno.
 - Articulación con los servicios de salud y desarrollo social provincial.`
+  },
+  // --- Boletines Oficiales descargados desde Google Drive ---
+  {
+    id: "boletin-drive-5545",
+    title: "Boletín Oficial N° 5545 - Ushuaia, Viernes 01 de Marzo de 2024",
+    category: "boletin_drive",
+    categoryLabel: "B.O. Drive",
+    number: "Edición N° 5545",
+    date: "01/03/2024",
+    organism: "Gobierno de Tierra del Fuego, AeIAS",
+    sourceUrl: "https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6",
+    sourceType: "boletin_drive",
+    aiSummary:
+      "Edición oficial completa de 254 páginas descargada e indexada desde Google Drive. Contiene el Decreto N° 281/24 (reestructuración del INFUETUR con nuevas Secretarías de Política Interna y Externa), edictos de licitaciones públicas de obras sanitarias y resoluciones de entes autárquicos.",
+    keyPoints: [
+      "Decreto N° 281/24: Designación de secretarios en el Instituto Fueguino de Turismo (INFUETUR).",
+      "Edictos de compras públicas y contrataciones de servicios provinciales.",
+      "Documento completo de 254 páginas archivado e indexado desde Google Drive.",
+      "Búsqueda por palabras clave con motor Whoosh habilitada."
+    ],
+    fullText: `BOLETÍN OFICIAL DE LA PROVINCIA DE TIERRA DEL FUEGO, ANTÁRTIDA E ISLAS DEL ATLÁNTICO SUR
+AÑO XXXIII - Ushuaia, Viernes 01 de Marzo de 2024 - N° 5545
+
+"Las Islas Malvinas, Georgias del Sur, Sandwich del Sur, y los espacios marítimos e insulares correspondientes son Argentinos"
+
+DECRETO N° 281/24 (16-02-24)
+VISTO: el Decreto Provincial 3186/23; y
+CONSIDERANDO:
+Que mediante el artículo 25 de la Ley Provincial N° 65, modificado por la Ley Provincial N° 1308, se establece que el Instituto Fueguino de Turismo contará con tres Secretarios, uno de Política Interna, otro de Política Externa y el tercero de Coordinación Estratégica, a propuesta del Presidente del mencionado Instituto.
+Por ello: EL GOBERNADOR DE LA PROVINCIA DE TIERRA DEL FUEGO, ANTÁRTIDA E ISLAS DEL ATLÁNTICO SUR DECRETA:
+ARTÍCULO 1°.- Desígnanse a los funcionarios que desempeñarán las secretarías ejecutivas en el Instituto Fueguino de Turismo.
+ARTÍCULO 2°.- Comuníquese, publíquese en el Boletín Oficial y archívese.
+
+ÍNDICE RESUMIDO DE LA EDICIÓN:
+- Decretos del Poder Ejecutivo Provincial (N° 270 a 302).
+- Resoluciones del Ministerio de Economía y Obras Públicas.
+- Licitaciones de la Dirección Provincial de Obras y Servicios Sanitarios (DPOSS).
+- Edictos judiciales y comerciales del Distrito Judicial Sur y Norte.`
+  },
+  {
+    id: "boletin-drive-5546",
+    title: "Boletín Oficial N° 5546 - Ushuaia, Lunes 04 de Marzo de 2024",
+    category: "boletin_drive",
+    categoryLabel: "B.O. Drive",
+    number: "Edición N° 5546",
+    date: "04/03/2024",
+    organism: "Ministerio de Producción y Ambiente • Ministerio de Bienestar",
+    sourceUrl: "https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6",
+    sourceType: "boletin_drive",
+    aiSummary:
+      "Edición oficial de 312 páginas procesada con PyMuPDF. Publica resoluciones conjuntas del Ministerio de Producción y Ambiente relativas a ordenamiento de bosques nativos, fiscalización pesquera en el Canal Beagle y convenios de fortalecimiento social.",
+    keyPoints: [
+      "Ministerio de Producción y Ambiente: Planes de manejo forestal sustentable.",
+      "Contrataciones y adquisiciones de equipamiento hospitalario.",
+      "Indexado en la base de datos PostgreSQL en la tabla 'boletines_drive'."
+    ],
+    fullText: `BOLETÍN OFICIAL DE LA PROVINCIA DE TIERRA DEL FUEGO, ANTÁRTIDA E ISLAS DEL ATLÁNTICO SUR
+AÑO XXXIII - Ushuaia, Lunes 04 de Marzo de 2024 - N° 5546
+
+SECCIONES OFICIALES:
+1. Actos del Poder Ejecutivo:
+   - Medidas de fomento productivo y pesca artesanal.
+   - Designaciones transitorias de personal en el área de salud pública.
+2. Resoluciones de la Agencia de Recaudación Fueguina (AREF):
+   - Nuevos regímenes de retención y percepción sobre actividades comerciales.
+3. Convenios Interjurisdiccionales con el Estado Nacional y municipios de Tolhuin y Río Grande.`
+  },
+  {
+    id: "boletin-drive-5547",
+    title: "Boletín Oficial N° 5547 - Ushuaia, Martes 05 de Marzo de 2024",
+    category: "boletin_drive",
+    categoryLabel: "B.O. Drive",
+    number: "Edición N° 5547",
+    date: "05/03/2024",
+    organism: "Ministerio de Jefatura de Gabinete • MOSP",
+    sourceUrl: "https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6",
+    sourceType: "boletin_drive",
+    aiSummary:
+      "Edición que publica el Decreto N° 303/24 y convocatorias a licitaciones públicas de infraestructura vial y edilicia en Ushuaia y Río Grande. Texto extraído íntegramente y buscable por Whoosh.",
+    keyPoints: [
+      "Decreto N° 303/24: Aprobación de convenios de asistencia vial invernal.",
+      "Licitaciones de la Dirección Provincial de Vialidad sobre Ruta Nacional N° 3.",
+      "Edictos sucesorios y de constitución de sociedades anónimas y de responsabilidad limitada."
+    ],
+    fullText: `BOLETÍN OFICIAL DE LA PROVINCIA DE TIERRA DEL FUEGO, ANTÁRTIDA E ISLAS DEL ATLÁNTICO SUR
+AÑO XXXIII - Ushuaia, Martes 05 de Marzo de 2024 - N° 5547
+
+DECRETO N° 303/24 (19-02-24)
+VISTO el expediente N° MJG-E-7523-2024 del Ministerio de Jefatura de Gabinete;
+CONSIDERANDO:
+Que resulta indispensable disponer de los recursos y maquinarias para el despeje de nieve y mantenimiento preventivo de rutas en la temporada invernal 2024.
+Por ello: EL GOBERNADOR DE LA PROVINCIA DECRETA:
+ARTÍCULO 1°.- Apruébase el plan de contingencia vial austral.
+ARTÍCULO 2°.- Comuníquese, publíquese y archívese.`
   }
 ];
 
@@ -489,6 +583,7 @@ export default function HomePage() {
       resoluciones: ALL_DOCUMENTS.filter(d => d.category === "resoluciones").length,
       leyes: ALL_DOCUMENTS.filter(d => d.category === "leyes").length,
       licitaciones: ALL_DOCUMENTS.filter(d => d.category === "licitaciones").length,
+      boletin_drive: ALL_DOCUMENTS.filter(d => d.category === "boletin_drive").length,
       biblioteca: ALL_DOCUMENTS.filter(d => d.sourceType === "biblioteca_pj").length,
       biblioteca_libros: ALL_DOCUMENTS.filter(d => d.category === "biblioteca_libros").length,
       biblioteca_doctrina: ALL_DOCUMENTS.filter(d => d.category === "biblioteca_doctrina").length,

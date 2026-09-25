@@ -24,6 +24,7 @@ const badgeVariants = cva(
         doctrina: "border-transparent bg-rose-500/15 text-rose-800 dark:text-rose-300",
         revista: "border-transparent bg-teal-500/15 text-teal-800 dark:text-teal-300",
         digital: "border-transparent bg-violet-500/15 text-violet-800 dark:text-violet-300",
+        drive: "border-transparent bg-cyan-500/15 text-cyan-800 dark:text-cyan-300",
       },
     },
     defaultVariants: {

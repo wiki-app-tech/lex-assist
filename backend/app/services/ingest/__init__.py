@@ -9,6 +9,11 @@ from backend.app.services.ingest.biblioteca_pj import (
     BibliotecaDocument,
     BibliotecaSearchResult,
 )
+from backend.app.services.ingest.boletin_drive import (
+    BoletinDriveService,
+    ExtractedBoletin,
+    SearchHit,
+)
 
 __all__ = [
     "BoletinTDFScraper",
@@ -17,5 +22,8 @@ __all__ = [
     "BibliotecaPJIngest",
     "BibliotecaDocument",
     "BibliotecaSearchResult",
+    "BoletinDriveService",
+    "ExtractedBoletin",
+    "SearchHit",
 ]
 

@@ -16,6 +16,7 @@ import {
   Newspaper,
   Laptop,
   Building,
+  HardDrive,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ export type CategoryKey =
   | "resoluciones"
   | "leyes"
   | "licitaciones"
+  | "boletin_drive"
   | "biblioteca"
   | "biblioteca_libros"
   | "biblioteca_doctrina"
@@ -48,11 +50,12 @@ export function Sidebar({
   isOpenMobile = false,
   onCloseMobile,
   documentCounts = {
-    todos: 56,
+    todos: 63,
     decretos: 18,
     resoluciones: 16,
     leyes: 6,
     licitaciones: 8,
+    boletin_drive: 7,
     biblioteca: 8,
     biblioteca_libros: 2,
     biblioteca_doctrina: 2,
@@ -70,6 +73,7 @@ export function Sidebar({
     { id: "resoluciones", label: "Resoluciones", icon: FileCheck, color: "text-sky-600 dark:text-sky-400" },
     { id: "leyes", label: "Leyes", icon: Scale, color: "text-emerald-600 dark:text-emerald-400" },
     { id: "licitaciones", label: "Licitaciones", icon: ShoppingBag, color: "text-purple-600 dark:text-purple-400" },
+    { id: "boletin_drive", label: "Boletines Oficiales (Drive)", icon: HardDrive, color: "text-cyan-600 dark:text-cyan-400" },
   ];
 
   const bibliotecaCategories: {

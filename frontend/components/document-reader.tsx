@@ -73,6 +73,7 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
   };
 
   const getBadgeVariant = (category: string) => {
+    if (category === "boletin_drive") return "drive";
     if (category.startsWith("biblioteca_")) {
       const sub = category.replace("biblioteca_", "");
       if (sub === "libros") return "libro";
@@ -83,6 +84,8 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
     }
     return category as any;
   };
+
+  const isDrive = document.sourceType === "boletin_drive";
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
@@ -115,6 +118,12 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
           {isKoha && (
             <Badge variant="outline" className="text-[10px] text-primary border-primary/30">
               Koha OPAC
+            </Badge>
+          )}
+
+          {isDrive && (
+            <Badge variant="outline" className="text-[10px] text-cyan-600 border-cyan-500/30">
+              Google Drive • Whoosh
             </Badge>
           )}
         </div>

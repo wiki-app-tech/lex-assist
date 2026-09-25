@@ -7,14 +7,15 @@ import {
   ExternalLink,
   Copy,
   Check,
-  Share2,
   Calendar,
   Building2,
-  Bookmark,
   BookOpen,
   ArrowLeft,
-  ZoomIn,
-  ZoomOut,
+  User,
+  Library,
+  Tag,
+  MapPin,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,16 +44,18 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
             Ningún documento seleccionado
           </h3>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Selecciona un decreto, resolución, ley o licitación del panel central para visualizar su resumen con IA y el texto normativo original completo.
+            Selecciona una norma del Boletín Oficial o una obra del catálogo de la Biblioteca del Poder Judicial para visualizar su resumen y contenido.
           </p>
         </div>
       </div>
     );
   }
 
+  const isKoha = document.sourceType === "biblioteca_pj";
+
   const handleCopy = () => {
     navigator.clipboard.writeText(
-      `${document.title}\n\nResumen IA:\n${document.aiSummary}\n\nTexto:\n${document.fullText}`
+      `${document.title}\n\nResumen IA:\n${document.aiSummary}\n\nTexto / Reseña:\n${document.fullText}`
     );
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -69,11 +72,23 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
     }
   };
 
+  const getBadgeVariant = (category: string) => {
+    if (category.startsWith("biblioteca_")) {
+      const sub = category.replace("biblioteca_", "");
+      if (sub === "libros") return "libro";
+      if (sub === "doctrina") return "doctrina";
+      if (sub === "revistas") return "revista";
+      if (sub === "digital") return "digital";
+      return "biblioteca";
+    }
+    return category as any;
+  };
+
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
       {/* Reader Sticky Header */}
       <div className="flex items-center justify-between p-4 border-b border-border/80 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 flex-wrap gap-y-1">
           {onBackMobile && (
             <Button
               variant="ghost"
@@ -85,10 +100,23 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
               <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
-          <Badge variant={document.category as any} className="text-xs uppercase px-2.5 py-0.5">
+          <Badge variant={getBadgeVariant(document.category)} className="text-xs uppercase px-2.5 py-0.5">
             {document.categoryLabel}
           </Badge>
-          <span className="text-xs text-muted-foreground font-mono">{document.number}</span>
+
+          {document.callNumber ? (
+            <span className="text-xs font-mono bg-muted/80 text-muted-foreground px-2 py-0.5 rounded border border-border/60">
+              Signatura: {document.callNumber}
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground font-mono">{document.number}</span>
+          )}
+
+          {isKoha && (
+            <Badge variant="outline" className="text-[10px] text-primary border-primary/30">
+              Koha OPAC
+            </Badge>
+          )}
         </div>
 
         {/* Reader Actions */}
@@ -147,6 +175,20 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
               </a>
             </Button>
           )}
+
+          {document.sourceUrl && (
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="h-8 text-xs space-x-1.5 border-border"
+            >
+              <a href={document.sourceUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{isKoha ? "Ficha Koha" : "Fuente"}</span>
+              </a>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -158,33 +200,64 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               <span className="flex items-center space-x-1">
                 <Calendar className="h-3.5 w-3.5 text-primary" />
-                <span>Publicado: {document.date}</span>
+                <span>{isKoha ? `Año: ${document.date}` : `Publicado: ${document.date}`}</span>
               </span>
               <span>•</span>
               <span className="flex items-center space-x-1">
-                <Building2 className="h-3.5 w-3.5 text-primary" />
-                <span>{document.organism}</span>
+                {isKoha ? (
+                  <>
+                    <User className="h-3.5 w-3.5 text-primary" />
+                    <span>Autor: {document.author || document.organism}</span>
+                  </>
+                ) : (
+                  <>
+                    <Building2 className="h-3.5 w-3.5 text-primary" />
+                    <span>{document.organism}</span>
+                  </>
+                )}
               </span>
-              <span>•</span>
-              <span className="text-muted-foreground/80">Tierra del Fuego, AeIAS</span>
+              {document.branch && (
+                <>
+                  <span>•</span>
+                  <span className="flex items-center space-x-1 text-primary">
+                    <MapPin className="h-3.5 w-3.5" />
+                    <span>{document.branch}</span>
+                  </span>
+                </>
+              )}
             </div>
 
             <h1 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-foreground leading-tight">
               {document.title}
             </h1>
+
+            {/* Subject tags if available */}
+            {document.subjects && document.subjects.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {document.subjects.map((sub, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center text-[10px] bg-secondary/80 text-secondary-foreground px-2 py-0.5 rounded-full border border-border/50"
+                  >
+                    <Tag className="h-2.5 w-2.5 mr-1 text-primary/70" />
+                    {sub}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* AI SUMMARY BOX (Destacado arriba) */}
+          {/* AI SUMMARY BOX */}
           <Card className="border-primary/30 bg-primary/5 dark:bg-primary/10 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-primary" />
             <CardHeader className="p-4 sm:p-5 pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2 text-primary font-semibold text-sm">
                   <Sparkles className="h-4 w-4" />
-                  <span>Resumen IA (Síntesis Administrativa)</span>
+                  <span>Resumen IA & Descriptores Analíticos</span>
                 </div>
                 <Badge variant="subtle" className="text-[10px] tracking-wider uppercase font-mono">
-                  Ollama • Llama 3.1
+                  {isKoha ? "Koha • Análisis Doctrinal" : "Ollama • Llama 3.1"}
                 </Badge>
               </div>
             </CardHeader>
@@ -197,7 +270,7 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
               {document.keyPoints && document.keyPoints.length > 0 && (
                 <div className="pt-2 border-t border-primary/20 space-y-2">
                   <span className="text-xs font-semibold uppercase tracking-wider text-primary block">
-                    Puntos clave extraídos:
+                    Puntos destacados / Descriptores temáticos:
                   </span>
                   <ul className="space-y-1.5 text-xs text-muted-foreground font-sans">
                     {document.keyPoints.map((point, idx) => (
@@ -211,16 +284,20 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
               )}
 
               {/* Trazabilidad & Fuente */}
-              <div className="pt-2 flex flex-wrap items-center justify-between text-[11px] text-muted-foreground/80 border-t border-primary/15">
-                <span>Trazabilidad verificada: Boletín Oficial TDF</span>
+              <div className="pt-2 flex flex-wrap items-center justify-between text-[11px] text-muted-foreground/80 border-t border-primary/15 gap-2">
+                <span>
+                  {isKoha
+                    ? `Biblioteca Judicial: ${document.publisher || "Poder Judicial de Tierra del Fuego"}`
+                    : "Trazabilidad verificada: Boletín Oficial TDF"}
+                </span>
                 {document.sourceUrl && (
                   <a
                     href={document.sourceUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center space-x-1 text-primary hover:underline"
+                    className="inline-flex items-center space-x-1 text-primary hover:underline font-medium"
                   >
-                    <span>Ver publicación original</span>
+                    <span>{isKoha ? "Ver ficha en Koha OPAC" : "Ver publicación oficial"}</span>
                     <ExternalLink className="h-3 w-3" />
                   </a>
                 )}
@@ -230,11 +307,11 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
 
           <Separator className="my-8" />
 
-          {/* ORIGINAL TEXT (Tipografía Serif Lora con amplios márgenes) */}
+          {/* DOCUMENT CONTENT / EXTRACT */}
           <div className="space-y-4">
             <div className="flex items-center justify-between text-xs text-muted-foreground uppercase tracking-wider font-sans font-medium pb-2 border-b border-border/60">
-              <span>Texto Completo del Acto Administrativo</span>
-              <span className="font-mono">Transcripción Oficial</span>
+              <span>{isKoha ? "Ficha Técnica & Reseña de Contenido" : "Texto Completo del Acto Administrativo"}</span>
+              <span className="font-mono">{isKoha ? "Catálogo OPAC" : "Transcripción Oficial"}</span>
             </div>
 
             <article
@@ -254,9 +331,13 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
 
           {/* Final Source Citation Footer */}
           <div className="mt-12 p-4 rounded-lg bg-muted/40 border border-border/80 text-xs text-muted-foreground space-y-1 font-sans">
-            <div className="font-semibold text-foreground">Cita legal sugerida:</div>
+            <div className="font-semibold text-foreground">
+              {isKoha ? "Referencia Bibliográfica:" : "Cita legal sugerida:"}
+            </div>
             <p className="font-mono text-[11px]">
-              Provincia de Tierra del Fuego, AeIAS. {document.categoryLabel} {document.number}. Publicado en el Boletín Oficial de Tierra del Fuego con fecha {document.date}.
+              {isKoha
+                ? `${document.author ? `${document.author}. ` : ""}${document.title}. ${document.publisher || "Poder Judicial TDF"}${document.callNumber ? ` [Signatura: ${document.callNumber}]` : ""}. Catálogo Biblioteca PJ Tierra del Fuego.`
+                : `Provincia de Tierra del Fuego, AeIAS. ${document.categoryLabel} ${document.number}. Publicado en el Boletín Oficial de Tierra del Fuego con fecha ${document.date}.`}
             </p>
           </div>
         </div>

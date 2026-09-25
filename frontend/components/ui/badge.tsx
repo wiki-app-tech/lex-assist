@@ -19,6 +19,11 @@ const badgeVariants = cva(
         resolucion: "border-transparent bg-sky-500/15 text-sky-800 dark:text-sky-300",
         ley: "border-transparent bg-emerald-500/15 text-emerald-800 dark:text-emerald-300",
         licitacion: "border-transparent bg-purple-500/15 text-purple-800 dark:text-purple-300",
+        biblioteca: "border-transparent bg-blue-500/15 text-blue-800 dark:text-blue-300",
+        libro: "border-transparent bg-indigo-500/15 text-indigo-800 dark:text-indigo-300",
+        doctrina: "border-transparent bg-rose-500/15 text-rose-800 dark:text-rose-300",
+        revista: "border-transparent bg-teal-500/15 text-teal-800 dark:text-teal-300",
+        digital: "border-transparent bg-violet-500/15 text-violet-800 dark:text-violet-300",
       },
     },
     defaultVariants: {

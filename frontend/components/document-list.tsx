@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Search, Sparkles, Calendar, Building2, SlidersHorizontal, ArrowUpDown } from "lucide-react";
+import { Search, Sparkles, Calendar, Building2, BookMarked, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -12,7 +12,15 @@ import type { CategoryKey } from "@/components/sidebar";
 export interface DocumentItem {
   id: string;
   title: string;
-  category: "decretos" | "resoluciones" | "leyes" | "licitaciones";
+  category:
+    | "decretos"
+    | "resoluciones"
+    | "leyes"
+    | "licitaciones"
+    | "biblioteca_libros"
+    | "biblioteca_doctrina"
+    | "biblioteca_revistas"
+    | "biblioteca_digital";
   categoryLabel: string;
   number: string;
   date: string;
@@ -22,6 +30,13 @@ export interface DocumentItem {
   pdfUrl?: string;
   fullText: string;
   keyPoints: string[];
+  author?: string;
+  publisher?: string;
+  callNumber?: string;
+  branch?: string;
+  kohaBiblionumber?: string;
+  subjects?: string[];
+  sourceType?: "boletin" | "biblioteca_pj";
 }
 
 interface DocumentListProps {
@@ -41,6 +56,37 @@ export function DocumentList({
   searchQuery,
   onSearchChange,
 }: DocumentListProps) {
+  const getCategoryTitle = () => {
+    switch (selectedCategory) {
+      case "todos":
+        return "Todas las fuentes";
+      case "biblioteca":
+        return "Biblioteca Judicial (Todos)";
+      case "biblioteca_libros":
+        return "Libros & Tratados";
+      case "biblioteca_doctrina":
+        return "Doctrina & Artículos";
+      case "biblioteca_revistas":
+        return "Revistas Jurídicas";
+      case "biblioteca_digital":
+        return "Recursos Digitales";
+      default:
+        return selectedCategory;
+    }
+  };
+
+  const getBadgeVariant = (category: string) => {
+    if (category.startsWith("biblioteca_")) {
+      const sub = category.replace("biblioteca_", "");
+      if (sub === "libros") return "libro";
+      if (sub === "doctrina") return "doctrina";
+      if (sub === "revistas") return "revista";
+      if (sub === "digital") return "digital";
+      return "biblioteca";
+    }
+    return category as any;
+  };
+
   return (
     <div className="flex flex-col h-full border-r border-border bg-background">
       {/* Header & Search Bar */}
@@ -48,15 +94,15 @@ export function DocumentList({
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <h2 className="text-base font-semibold tracking-tight font-serif text-foreground">
-              Boletines & Normativa
+              {selectedCategory.startsWith("biblioteca") ? "Biblioteca Judicial Koha" : "Boletines & Normativa"}
             </h2>
             <p className="text-xs text-muted-foreground">
-              {documents.length} documentos disponibles
+              {documents.length} registros disponibles
             </p>
           </div>
           <div className="flex items-center space-x-1.5">
             <Badge variant="outline" className="text-xs capitalize font-normal">
-              {selectedCategory === "todos" ? "Todas las fuentes" : selectedCategory}
+              {getCategoryTitle()}
             </Badge>
           </div>
         </div>
@@ -65,7 +111,7 @@ export function DocumentList({
         <div className="relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por palabra clave, organismo o norma..."
+            placeholder="Buscar por título, autor, signatura o materia..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-9 h-9 text-xs bg-card/60 focus:bg-background"
@@ -79,13 +125,14 @@ export function DocumentList({
           <div className="text-center py-16 px-4">
             <p className="text-sm font-medium text-foreground">No se encontraron documentos</p>
             <p className="text-xs text-muted-foreground mt-1">
-              Prueba modificando los términos de búsqueda o cambiando de categoría.
+              Prueba modificando los términos de búsqueda o cambiando de catálogo.
             </p>
           </div>
         ) : (
           <div className="space-y-2.5">
             {documents.map((doc) => {
               const isSelected = selectedDocId === doc.id;
+              const isKohaDoc = doc.sourceType === "biblioteca_pj";
 
               return (
                 <Card
@@ -100,14 +147,21 @@ export function DocumentList({
                 >
                   <CardHeader className="p-3.5 pb-2 space-y-2">
                     <div className="flex items-center justify-between text-xs gap-2">
-                      <Badge
-                        variant={doc.category as any}
-                        className="text-[11px] font-medium tracking-wide uppercase px-2 py-0.5"
-                      >
-                        {doc.categoryLabel}
-                      </Badge>
+                      <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                        <Badge
+                          variant={getBadgeVariant(doc.category)}
+                          className="text-[11px] font-medium tracking-wide uppercase px-2 py-0.5"
+                        >
+                          {doc.categoryLabel}
+                        </Badge>
+                        {doc.callNumber && (
+                          <span className="text-[10px] font-mono bg-muted/80 text-muted-foreground px-1.5 py-0.5 rounded border border-border/50">
+                            {doc.callNumber}
+                          </span>
+                        )}
+                      </div>
 
-                      <div className="flex items-center text-muted-foreground text-[11px] space-x-1">
+                      <div className="flex items-center text-muted-foreground text-[11px] space-x-1 shrink-0">
                         <Calendar className="h-3 w-3" />
                         <span>{doc.date}</span>
                       </div>
@@ -120,15 +174,24 @@ export function DocumentList({
 
                   <CardContent className="p-3.5 pt-0 space-y-2">
                     <div className="flex items-center text-xs text-muted-foreground font-medium space-x-1.5">
-                      <Building2 className="h-3 w-3 shrink-0 text-primary/70" />
-                      <span className="truncate">{doc.organism}</span>
+                      {isKohaDoc ? (
+                        <>
+                          <User className="h-3 w-3 shrink-0 text-primary/70" />
+                          <span className="truncate">{doc.author || doc.organism}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Building2 className="h-3 w-3 shrink-0 text-primary/70" />
+                          <span className="truncate">{doc.organism}</span>
+                        </>
+                      )}
                     </div>
 
                     {/* AI Summary Snippet */}
                     <div className="rounded-md bg-muted/60 p-2 text-xs border border-border/40">
                       <div className="flex items-center space-x-1 text-[11px] font-semibold text-primary mb-1">
                         <Sparkles className="h-3 w-3 shrink-0" />
-                        <span>Resumen Inteligente</span>
+                        <span>Resumen & Descriptores</span>
                       </div>
                       <p className="text-muted-foreground line-clamp-2 text-[11px] leading-relaxed">
                         {doc.aiSummary}

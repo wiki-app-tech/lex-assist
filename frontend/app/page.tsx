@@ -7,8 +7,9 @@ import { DocumentReader } from "@/components/document-reader";
 import { MobileHeader } from "@/components/mobile-header";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-// Datos de demostración enriquecidos para Tierra del Fuego, AeIAS
-const SAMPLE_DOCUMENTS: DocumentItem[] = [
+// Catálogo combinado: Boletín Oficial TDF y Biblioteca del Poder Judicial TDF (Koha)
+const ALL_DOCUMENTS: DocumentItem[] = [
+  // --- Normativa y Boletín Oficial ---
   {
     id: "tdf-decreto-142-2026",
     title: "Decreto N° 142/26 - Declaración de Interés Provincial del Plan de Conservación y Manejo de Turberas",
@@ -19,6 +20,7 @@ const SAMPLE_DOCUMENTS: DocumentItem[] = [
     organism: "Secretaría de Ambiente y Cambio Climático",
     sourceUrl: "https://boletinoficial.tierradelfuego.gob.ar/decretos/142-2026",
     pdfUrl: "https://boletinoficial.tierradelfuego.gob.ar/archivos/dto-142-26.pdf",
+    sourceType: "boletin",
     aiSummary:
       "Declara de interés prioritario la protección integral de las turberas fueguinas como reservorios estratégicos de carbono y agua dulce. Establece una moratoria de 24 meses para nuevas extracciones comerciales en la cuenca del Río Grande y crea el Registro Provincial de Humedales Australes.",
     keyPoints: [
@@ -60,6 +62,7 @@ ARTÍCULO 4°.- Comuníquese, publíquese en el Boletín Oficial de la Provincia
     organism: "Poder Legislativo Provincial",
     sourceUrl: "https://buscar.legistdf.gob.ar/leyes/1520",
     pdfUrl: "https://buscar.legistdf.gob.ar/archivos/ley-1520.pdf",
+    sourceType: "boletin",
     aiSummary:
       "Crea el Régimen Provincial de Promoción de la Economía del Conocimiento. Otorga exenciones al impuesto sobre los Ingresos Brutos y sellos para empresas que desarrollen software, IA y biotecnología radicadas en Ushuaia, Tolhuin y Río Grande.",
     keyPoints: [
@@ -91,6 +94,7 @@ ARTÍCULO 4°.- Comuníquese al Poder Ejecutivo Provincial.`
     organism: "Dirección Provincial de Puertos (DPP)",
     sourceUrl: "https://boletinoficial.tierradelfuego.gob.ar/resoluciones/874-2026",
     pdfUrl: "https://boletinoficial.tierradelfuego.gob.ar/archivos/res-874-26.pdf",
+    sourceType: "boletin",
     aiSummary:
       "Actualiza el tarifario de amarre, provisión de agua potable y gestión de residuos para buques de crucero y expedición con destino a la Antártida en el Puerto de Ushuaia, aplicando una bonificación verde del 15% para embarcaciones con propulsión híbrida o GNL.",
     keyPoints: [
@@ -127,6 +131,7 @@ ARTÍCULO 3°.- Regístrese, publíquese en el Boletín Oficial y comuníquese a
     organism: "Ministerio de Obras y Servicios Públicos",
     sourceUrl: "https://boletinoficial.tierradelfuego.gob.ar/licitaciones/12-2026",
     pdfUrl: "https://boletinoficial.tierradelfuego.gob.ar/archivos/lic-12-26.pdf",
+    sourceType: "boletin",
     aiSummary:
       "Convocatoria a licitación pública nacional e internacional para el tendido subterráneo de 145 km de fibra óptica monomodo a lo largo de la Ruta Nacional N° 3. Presupuesto oficial estimado en $4.850.000.000 con apertura de sobres el 20 de octubre de 2026.",
     keyPoints: [
@@ -152,27 +157,369 @@ VENTA Y CONSULTA DE PLIEGOS: Gratuitos, descargables desde el sitio web instituc
 RECEPCIÓN DE OFERTAS: Hasta las 10:30 horas del día 20 de Octubre de 2026 en Mesa de Entradas General de Casa de Gobierno, San Martín 450, Ushuaia.
 
 ACTO DE APERTURA: 20 de Octubre de 2026 a las 11:00 horas en el Salón Islas Malvinas de Casa de Gobierno.`
+  },
+
+  // --- Biblioteca del Poder Judicial TDF (Koha) ---
+  // 1. Libros & Tratados (Koha LIB)
+  {
+    id: "koha-biblio-22",
+    title: "La anulación de oficio del acto administrativo : la denominada 'cosa juzgada administrativa'",
+    category: "biblioteca_libros",
+    categoryLabel: "Libro / Tratado",
+    number: "Koha #22",
+    date: "1981",
+    organism: "Biblioteca Poder Judicial Sur (Ushuaia)",
+    author: "Julio Rodolfo Comadira",
+    publisher: "Buenos Aires : Astrea, 1981",
+    callNumber: "342.924 COM",
+    branch: "Sede Sur (Ushuaia)",
+    kohaBiblionumber: "22",
+    subjects: ["DERECHO ADMINISTRATIVO", "ACTO ADMINISTRATIVO", "COSA JUZGADA", "REVOCACION DE OFICIO"],
+    sourceUrl: "https://biblioteca.justierradelfuego.gov.ar/cgi-bin/koha/opac-detail.pl?biblionumber=22",
+    sourceType: "biblioteca_pj",
+    aiSummary:
+      "Tratado doctrinario sobre la potestad revocatoria del Estado y las garantías constitucionales ante el acto administrativo regular. Analiza la doctrina de la cosa juzgada administrativa, estabilidad del acto y límites formales en sede contencioso-administrativa.",
+    keyPoints: [
+      "Principio de estabilidad del acto administrativo regular que genera derechos subjetivos.",
+      "Límites a la anulación oficiosa frente al principio de seguridad jurídica.",
+      "Evolución pretoriana en la jurisprudencia de la Corte Suprema y tribunales superiores.",
+      "Registro físico disponible en Biblioteca Central Ushuaia (Signatura: 342.924 COM)."
+    ],
+    fullText: `OBRA CATALOGADA EN BIBLIOTECA DEL PODER JUDICIAL DE TIERRA DEL FUEGO
+
+TÍTULO: La anulación de oficio del acto administrativo : la denominada "cosa juzgada administrativa"
+AUTOR: Comadira, Julio Rodolfo.
+EDITORIAL: Buenos Aires : Astrea, 1981. xix, 221 p. ; 22 cm.
+SIGNATURA TOPOGRÁFICA: 342.924 COM
+UBICACIÓN FÍSICA: Biblioteca Poder Judicial Sur - Ushuaia.
+
+SINOPSIS ANALÍTICA:
+La presente monografía constituye una obra liminar para el derecho público provincial y federal argentino. El autor aborda la tensión existente entre la legalidad objetiva del obrar estatal y la tutela de los derechos adquiridos por los administrados.
+
+CAPÍTULOS PRINCIPALES:
+I. Noción preliminar del acto administrativo y sus presunciones de legitimidad y ejecutoriedad.
+II. La estabilidad del acto administrativo y la impropiamente denominada 'cosa juzgada administrativa'.
+III. Vicios que justifican la extinción del acto: nulidad absoluta vs. nulidad relativa.
+IV. La doctrina del fallo 'Elena Carman de Cantón' y 'Pustelnik' en la jurisprudencia superior.
+V. Facultades revisoras en el ámbito de las administraciones públicas provinciales y municipales.
+
+DISPONIBILIDAD EN KOHA:
+Ítem disponible para consulta en sala y préstamo interbibliotecario en Sede Ushuaia.`
+  },
+  {
+    id: "koha-biblio-2356",
+    title: "Tutela jurídica del crédito : Medidas cautelares y acciones de recomposición patrimonial",
+    category: "biblioteca_libros",
+    categoryLabel: "Libro / Monografía",
+    number: "Koha #2356",
+    date: "1975",
+    organism: "Biblioteca Poder Judicial Sur (Ushuaia)",
+    author: "Juan Carlos Palmero",
+    publisher: "Buenos Aires : Astrea, 1975",
+    callNumber: "347.457 PAL",
+    branch: "Sede Sur (Ushuaia)",
+    kohaBiblionumber: "2356",
+    subjects: ["DERECHO CIVIL", "OBLIGACIONES", "TUTELA DEL CREDITO", "ACCION PAULIANA"],
+    sourceUrl: "https://biblioteca.justierradelfuego.gov.ar/cgi-bin/koha/opac-detail.pl?biblionumber=2356",
+    sourceType: "biblioteca_pj",
+    aiSummary:
+      "Estudio monográfico sobre los mecanismos de protección del acreedor frente a la insolvencia fraudulenta del deudor. Analiza la acción pauliana, subrogatoria y la adopción de medidas conservatorias preventivas en procesos civiles y comerciales.",
+    keyPoints: [
+      "Sistematización de las acciones de integración y conservación patrimonial.",
+      "Requisitos objetivos y subjetivos del fraude a los acreedores.",
+      "Compatibilidad con el régimen de quiebras y medidas cautelares genéricas.",
+      "Ejemplar disponible en Sede Sur Ushuaia."
+    ],
+    fullText: `OBRA CATALOGADA EN BIBLIOTECA DEL PODER JUDICIAL DE TIERRA DEL FUEGO
+
+TÍTULO: Tutela jurídica del crédito
+AUTOR: Palmero, Juan Carlos.
+EDITORIAL: Buenos Aires : Astrea, 1975.
+SIGNATURA TOPOGRÁFICA: 347.457 PAL
+UBICACIÓN FÍSICA: Biblioteca Poder Judicial Sur - Ushuaia.
+
+RESUMEN TEMÁTICO:
+La obra aborda de forma exhaustiva la defensa de los derechos de crédito desde una doble perspectiva sustancial y procesal. Explora la naturaleza jurídica del patrimonio como prenda común de los acreedores y las limitaciones que imponen las leyes de inembargabilidad.
+
+CONTENIDOS TRATADOS:
+- La agresión patrimonial legítima.
+- Embargo preventivo e inhibición general de bienes.
+- Acciones de simulación y revocatoria frente a terceros adquirentes a título oneroso o gratuito.`
+  },
+
+  // 2. Doctrina & Artículos (Koha ANA / ART)
+  {
+    id: "koha-biblio-2411",
+    title: "La inconstitucionalidad del solve et repete en la ley provincial 90 (policía del trabajo)",
+    category: "biblioteca_doctrina",
+    categoryLabel: "Doctrina Fueguina",
+    number: "Koha #2411",
+    date: "2017",
+    organism: "Poder Judicial de Tierra del Fuego",
+    author: "Yamina Pallotto",
+    publisher: "Ushuaia : Poder Judicial de Tierra del Fuego, 2017",
+    callNumber: "DOC TDF 2411",
+    branch: "Sede Sur (Ushuaia)",
+    kohaBiblionumber: "2411",
+    subjects: ["DERECHO LABORAL FUEGUINO", "LEY PROVINCIAL 90", "SOLVE ET REPETE", "TUTELA JUDICIAL EFECTIVA"],
+    sourceUrl: "https://biblioteca.justierradelfuego.gov.ar/cgi-bin/koha/opac-detail.pl?biblionumber=2411",
+    sourceType: "biblioteca_pj",
+    aiSummary:
+      "Investigación jurídica editada por el Poder Judicial de Tierra del Fuego que fundamenta la inconstitucionalidad del requisito de depósito previo (solve et repete) establecido en la Ley Provincial N° 90 de policía laboral, a la luz del artículo 8 de la CADH y la doctrina del STJ.",
+    keyPoints: [
+      "Impacto directo sobre la normativa local: Ley Provincial 90 de Tierra del Fuego.",
+      "Vulneración del acceso irrestricto a la justicia por exigencias pecuniarias previas.",
+      "Análisis de precedentes del Superior Tribunal de Justicia de Tierra del Fuego.",
+      "Edición institucional de la Escuela Judicial / Biblioteca del PJ TDF."
+    ],
+    fullText: `PUBLICACIÓN OFICIAL - PODER JUDICIAL DE TIERRA DEL FUEGO
+
+TÍTULO: La inconstitucionalidad del solve et repete en la ley provincial 90 (policía del trabajo)
+AUTORA: Yamina Pallotto.
+PUBLICACIÓN: Ushuaia : Poder Judicial de Tierra del Fuego, 2017.
+COLECCIÓN: Doctrina y Ensayos del Poder Judicial Austral.
+
+INTRODUCCIÓN Y SÍNTESIS DE LA DOCTRINA:
+La autora somete a riguroso escrutinio la exigencia legal contenida en la Ley Provincial N° 90 que condiciona la revisión judicial de las sanciones impuestas por la autoridad administrativa laboral al previo pago de la multa.
+
+CONCLUSIONES PRINCIPALES:
+1. El principio solve et repete, concebido como prerrogativa fiscal del siglo XIX, resulta anacrónico frente a la constitucionalización del derecho laboral y las directivas del Sistema Interamericano de Derechos Humanos.
+2. El Superior Tribunal de Justicia de Tierra del Fuego ha ido consolidando un criterio aperturista en orden a habilitar la instancia judicial cuando se demuestre imposibilidad de pago o afectación del giro comercial.
+3. Propuesta de reforma legislativa para armonizar el procedimiento administrativo sancionador con el debido proceso adjetivo.`
+  },
+  {
+    id: "koha-biblio-2408",
+    title: "La legitimación en las acciones reales bajo el Código Civil y Comercial",
+    category: "biblioteca_doctrina",
+    categoryLabel: "Doctrina / Ensayo",
+    number: "Koha #2408",
+    date: "2018",
+    organism: "Biblioteca Poder Judicial Norte (Río Grande)",
+    author: "Rosana I. Aguilar",
+    publisher: "Santa Fe : Rubinzal-Culzoni, 2018",
+    callNumber: "347.23 AGU",
+    branch: "Sede Norte (Río Grande)",
+    kohaBiblionumber: "2408",
+    subjects: ["DERECHOS REALES", "ACCION REIVINDICATORIA", "LEGITIMACION ACTIVA", "POSESION"],
+    sourceUrl: "https://biblioteca.justierradelfuego.gov.ar/cgi-bin/koha/opac-detail.pl?biblionumber=2408",
+    sourceType: "biblioteca_pj",
+    aiSummary:
+      "Tratamiento analítico de la legitimación activa y pasiva en las acciones reivindicatoria, confesoria, negatoria y de deslinde. Especial atención a los conflictos posesorios sobre inmuebles y servidumbres de paso en regiones australes.",
+    keyPoints: [
+      "Prueba de la titularidad registral y cotejo de títulos dominiales.",
+      "Acción posesoria vs. acción real en la práctica de los juzgados de primera instancia.",
+      "Disponible en la Biblioteca del Poder Judicial Norte (Río Grande)."
+    ],
+    fullText: `OBRA CATALOGADA EN BIBLIOTECA DEL PODER JUDICIAL DE TIERRA DEL FUEGO
+
+TÍTULO: La legitimación en las acciones reales
+AUTORA: Aguilar, Rosana I.
+PUBLICACIÓN: Santa Fe : Rubinzal-Culzoni, 2018.
+SIGNATURA TOPOGRÁFICA: 347.23 AGU
+UBICACIÓN FÍSICA: Biblioteca Poder Judicial Norte - Río Grande.
+
+RESUMEN DOCTRINARIO:
+Un análisis práctico sobre las complejidades probatorias que enfrentan los titulares registrales para acreditar la legitimación activa frente a ocupaciones clandestinas o interversión de títulos posesorios.`
+  },
+
+  // 3. Publicaciones Periódicas / Revistas Jurídicas (Koha PP)
+  {
+    id: "koha-biblio-2404",
+    title: "Revista de derecho privado y comunitario (Colección Completa)",
+    category: "biblioteca_revistas",
+    categoryLabel: "Revista Jurídica",
+    number: "Koha #2404",
+    date: "1992-",
+    organism: "Biblioteca Poder Judicial Norte (Río Grande)",
+    author: "Héctor Alegría, Jorge Mosset Iturraspe (Directores)",
+    publisher: "Santa Fe : Rubinzal-Culzoni, 1992-",
+    callNumber: "347.1 (05) REV",
+    branch: "Sede Norte (Río Grande)",
+    kohaBiblionumber: "2404",
+    subjects: ["DERECHO PRIVADO", "CONTRATOS", "DERECHO DEL CONSUMIDOR", "RESPONSABILIDAD CIVIL"],
+    sourceUrl: "https://biblioteca.justierradelfuego.gov.ar/cgi-bin/koha/opac-detail.pl?biblionumber=2404",
+    sourceType: "biblioteca_pj",
+    aiSummary:
+      "Publicación seriada referente del derecho patrimonial argentino. Contiene ensayos monográficos temáticos (daños en entornos digitales, cláusulas abusivas, fideicomisos) y recopilación comentada de jurisprudencia de las cortes provinciales y CSJN.",
+    keyPoints: [
+      "Colección hemerográfica física preservada en Sede Río Grande.",
+      "Monografías sobre unificación civil y comercial y responsabilidad médica.",
+      "Índices analíticos actualizados por autores y materias."
+    ],
+    fullText: `COLECCIÓN HEMEROGRÁFICA - BIBLIOTECA PODER JUDICIAL TDF
+
+TÍTULO: Revista de derecho privado y comunitario
+DIRECTORES: Héctor Alegría y Jorge Mosset Iturraspe.
+EDITORIAL: Santa Fe : Rubinzal-Culzoni, 1992-.
+PERIODICIDAD: Cuatrimestral.
+SIGNATURA TOPOGRÁFICA: 347.1 (05) REV
+UBICACIÓN FÍSICA: Biblioteca Poder Judicial Norte (Río Grande) y Sede Ushuaia.
+
+TOMOS DESTACADOS EN ARCHIVO:
+- Daños en el transporte marítimo y aéreo.
+- Contratación electrónica y defensa del consumidor.
+- Régimen de garantías y responsabilidad concursal.`
+  },
+  {
+    id: "koha-biblio-2405",
+    title: "Revista de derecho procesal (Colección Trimestral)",
+    category: "biblioteca_revistas",
+    categoryLabel: "Revista Jurídica",
+    number: "Koha #2405",
+    date: "1998-",
+    organism: "Biblioteca Poder Judicial Sur (Ushuaia)",
+    author: "Roland Arazi, Roberto Omar Berizonce, Jorge Walter Peyrano (Directores)",
+    publisher: "Santa Fe : Rubinzal-Culzoni, 1998-",
+    callNumber: "347.9 (05) REV",
+    branch: "Sede Sur (Ushuaia)",
+    kohaBiblionumber: "2405",
+    subjects: ["DERECHO PROCESAL CIVIL", "CARGAS PROBATORIAS DINAMICAS", "MEDIDAS AUTOSATISFACTIVAS"],
+    sourceUrl: "https://biblioteca.justierradelfuego.gov.ar/cgi-bin/koha/opac-detail.pl?biblionumber=2405",
+    sourceType: "biblioteca_pj",
+    aiSummary:
+      "Publicación académica especializada en derecho procesal constitucional, civil, comercial y penal. Estudia la celeridad judicial, notificación electrónica, medidas cautelares anticipatorias y amparos colectivos.",
+    keyPoints: [
+      "Aportes dogmáticos de los principales procesalistas de Iberoamérica.",
+      "Doctrina sobre oralidad efectiva y digitalización de expedientes judiciales.",
+      "Sede física: Biblioteca Central Ushuaia."
+    ],
+    fullText: `COLECCIÓN HEMEROGRÁFICA - BIBLIOTECA PODER JUDICIAL TDF
+
+TÍTULO: Revista de derecho procesal
+DIRECTORES: Roland Arazi, Roberto Omar Berizonce, Enrique M. Falcón, Jorge Walter Peyrano.
+EDITORIAL: Santa Fe : Rubinzal-Culzoni, 1998-.
+SIGNATURA TOPOGRÁFICA: 347.9 (05) REV
+UBICACIÓN FÍSICA: Biblioteca Poder Judicial Sur - Ushuaia.
+
+TEMAS CLAVE TRATADOS:
+- Eficacia temporal de las resoluciones cautelares.
+- Juicio por jurados y adaptaciones provinciales.
+- El rol del juez como director activo del proceso.`
+  },
+
+  // 4. Recursos Digitales de Acceso Libre (Koha ARD)
+  {
+    id: "koha-biblio-2163",
+    title: "Abuso sexual contra niños, niñas y adolescentes : Guía para la protección de derechos en el ámbito judicial",
+    category: "biblioteca_digital",
+    categoryLabel: "Recurso Digital / Guía",
+    number: "Koha #2163",
+    date: "2016",
+    organism: "Acceso Electrónico (AEL) • PJ TDF",
+    author: "Fondo de las Naciones Unidas para la Infancia (UNICEF)",
+    publisher: "Buenos Aires : UNICEF / Poder Judicial TDF, 2016",
+    callNumber: "343.541 UNI",
+    branch: "En línea / Acceso Electrónico (AEL)",
+    kohaBiblionumber: "2163",
+    subjects: ["DERECHOS DEL NIÑO", "CAMARA GESELL", "NO REVICTIMIZACION", "PROTOCOLO INTERINSTITUCIONAL"],
+    sourceUrl: "https://biblioteca.justierradelfuego.gov.ar/cgi-bin/koha/opac-detail.pl?biblionumber=2163",
+    sourceType: "biblioteca_pj",
+    aiSummary:
+      "Manual y protocolo de actuación técnica interinstitucional recomendado por el Poder Judicial de Tierra del Fuego. Fija estándares para la declaración testimonial en Cámara Gesell, asistencia psicológica temprana y garantías de no revictimización.",
+    keyPoints: [
+      "Protocolo adoptado por juzgados de instrucción y familia de Ushuaia y Río Grande.",
+      "Estándares internacionales de prueba testimonial infanto-juvenil.",
+      "Recurso digital de descarga y consulta libre en catálogo Koha."
+    ],
+    fullText: `DOCUMENTO DIGITAL INSTITUCIONAL - RECURSO DE ACCESO LIBRE
+
+TÍTULO: Abuso sexual contra niños, niñas y adolescentes : Una guía para tomar acciones y proteger sus derechos
+AUTOR INSTITUCIONAL: UNICEF Argentina y Poder Judicial de Tierra del Fuego.
+AÑO DE EDICIÓN: 2016.
+SIGNATURA TOPOGRÁFICA: 343.541 UNI
+MODALIDAD: Recurso digital de acceso abierto (AEL).
+
+OBJETIVO DE LA GUÍA:
+Brindar a magistrados, secretarios judiciales, peritos del Cuerpo Médico Forense y agentes policiales pautas científicas y legales unificadas para el abordaje de denuncias por delitos contra la integridad sexual de menores.
+
+CONTENIDOS PRINCIPALES:
+1. Marco normativo: Convención sobre los Derechos del Niño, Ley Nacional 26.061 y normativa provincial.
+2. La declaración mediante dispositivo de Cámara Gesell: intervención de psicólogos forenses.
+3. Valoración probatoria de la testimonial en coherencia con indicios médicos y periciales.`
+  },
+  {
+    id: "koha-biblio-2164",
+    title: "Protocolo de actuación judicial en situaciones de violencia física, psicológica y de género",
+    category: "biblioteca_digital",
+    categoryLabel: "Recurso Digital / Guía",
+    number: "Koha #2164",
+    date: "2016",
+    organism: "Acceso Electrónico (AEL) • PJ TDF",
+    author: "Secretaría de Derechos Humanos & UNICEF",
+    publisher: "San José : UNICEF / Ministerio Público, 2016",
+    callNumber: "343.541 PRO",
+    branch: "En línea / Acceso Electrónico (AEL)",
+    kohaBiblionumber: "2164",
+    subjects: ["GENERO", "VIOLENCIA DE GENERO", "MEDIDAS CAUTELARES URGENTES", "TUTELA JUDICIAL"],
+    sourceUrl: "https://biblioteca.justierradelfuego.gov.ar/cgi-bin/koha/opac-detail.pl?biblionumber=2164",
+    sourceType: "biblioteca_pj",
+    aiSummary:
+      "Protocolo operativo para la adopción inmediata de medidas de protección: exclusión del hogar, restricción perimetral y custodia policial en los distritos judiciales de Tierra del Fuego. Enfoque de género y celeridad procesal.",
+    keyPoints: [
+      "Circuito de comunicación directa con comisarías de género en Ushuaia, Tolhuin y Río Grande.",
+      "Garantía de gratuidad y patrocinio letrado a víctimas en situación de riesgo.",
+      "Formato digital completo disponible en el OPAC judicial."
+    ],
+    fullText: `DOCUMENTO DIGITAL INSTITUCIONAL - RECURSO DE ACCESO LIBRE
+
+TÍTULO: Protocolo de actuación en situaciones de violencia física, psicológica, sexual, acoso y hostigamiento
+AUTORES: UNICEF / Equipos Técnicos Multidisciplinarios.
+SIGNATURA TOPOGRÁFICA: 343.541 PRO
+MODALIDAD: Recurso digital de acceso abierto (AEL).
+
+DIRECTIVAS CENTRALES:
+- Recepción de la denuncia con estricta reserva de identidad.
+- Plazo máximo de 24 horas para la fijación de medidas de protección cautelar por parte del juez de turno.
+- Articulación con los servicios de salud y desarrollo social provincial.`
   }
 ];
 
 export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = React.useState<CategoryKey>("todos");
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [selectedDoc, setSelectedDoc] = React.useState<DocumentItem | null>(SAMPLE_DOCUMENTS[0]);
+  const [selectedDoc, setSelectedDoc] = React.useState<DocumentItem | null>(ALL_DOCUMENTS[0]);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
   const [mobileView, setMobileView] = React.useState<"list" | "reader">("list");
 
+  // Dynamic counts for each category
+  const documentCounts = React.useMemo(() => {
+    const counts: Record<CategoryKey, number> = {
+      todos: ALL_DOCUMENTS.length,
+      decretos: ALL_DOCUMENTS.filter(d => d.category === "decretos").length,
+      resoluciones: ALL_DOCUMENTS.filter(d => d.category === "resoluciones").length,
+      leyes: ALL_DOCUMENTS.filter(d => d.category === "leyes").length,
+      licitaciones: ALL_DOCUMENTS.filter(d => d.category === "licitaciones").length,
+      biblioteca: ALL_DOCUMENTS.filter(d => d.sourceType === "biblioteca_pj").length,
+      biblioteca_libros: ALL_DOCUMENTS.filter(d => d.category === "biblioteca_libros").length,
+      biblioteca_doctrina: ALL_DOCUMENTS.filter(d => d.category === "biblioteca_doctrina").length,
+      biblioteca_revistas: ALL_DOCUMENTS.filter(d => d.category === "biblioteca_revistas").length,
+      biblioteca_digital: ALL_DOCUMENTS.filter(d => d.category === "biblioteca_digital").length,
+    };
+    return counts;
+  }, []);
+
   // Filter documents by category and search
   const filteredDocuments = React.useMemo(() => {
-    return SAMPLE_DOCUMENTS.filter((doc) => {
-      const matchCategory =
-        selectedCategory === "todos" || doc.category === selectedCategory;
+    return ALL_DOCUMENTS.filter((doc) => {
+      let matchCategory = false;
+      if (selectedCategory === "todos") {
+        matchCategory = true;
+      } else if (selectedCategory === "biblioteca") {
+        matchCategory = doc.sourceType === "biblioteca_pj";
+      } else {
+        matchCategory = doc.category === selectedCategory;
+      }
+
+      const q = searchQuery.trim().toLowerCase();
       const matchSearch =
-        searchQuery.trim() === "" ||
-        doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc.organism.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc.aiSummary.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doc.number.toLowerCase().includes(searchQuery.toLowerCase());
+        q === "" ||
+        doc.title.toLowerCase().includes(q) ||
+        doc.organism.toLowerCase().includes(q) ||
+        doc.aiSummary.toLowerCase().includes(q) ||
+        doc.number.toLowerCase().includes(q) ||
+        (doc.author && doc.author.toLowerCase().includes(q)) ||
+        (doc.callNumber && doc.callNumber.toLowerCase().includes(q)) ||
+        (doc.subjects && doc.subjects.some(s => s.toLowerCase().includes(q)));
 
       return matchCategory && matchSearch;
     });
@@ -181,6 +528,19 @@ export default function HomePage() {
   const handleSelectDoc = (doc: DocumentItem) => {
     setSelectedDoc(doc);
     setMobileView("reader");
+  };
+
+  const handleSelectCategory = (cat: CategoryKey) => {
+    setSelectedCategory(cat);
+    // Auto-select first matching document in the newly selected category
+    const matchingDocs = ALL_DOCUMENTS.filter(d => {
+      if (cat === "todos") return true;
+      if (cat === "biblioteca") return d.sourceType === "biblioteca_pj";
+      return d.category === cat;
+    });
+    if (matchingDocs.length > 0) {
+      setSelectedDoc(matchingDocs[0]);
+    }
   };
 
   return (
@@ -192,15 +552,10 @@ export default function HomePage() {
         {/* Left Column: Sidebar */}
         <Sidebar
           selectedCategory={selectedCategory}
-          onSelectCategory={(cat) => {
-            setSelectedCategory(cat);
-            if (filteredDocuments.length > 0 && !filteredDocuments.some(d => d.id === selectedDoc?.id)) {
-              const firstMatch = SAMPLE_DOCUMENTS.find(d => cat === "todos" || d.category === cat);
-              if (firstMatch) setSelectedDoc(firstMatch);
-            }
-          }}
+          onSelectCategory={handleSelectCategory}
           isOpenMobile={isMobileSidebarOpen}
           onCloseMobile={() => setIsMobileSidebarOpen(false)}
+          documentCounts={documentCounts}
         />
 
         {/* Desktop Top Right Bar with Theme Toggle */}

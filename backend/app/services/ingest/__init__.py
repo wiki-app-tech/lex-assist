@@ -4,5 +4,18 @@ from backend.app.services.ingest.boletin_tdf import (
     BoletinEdition,
     NormaDocument,
 )
+from backend.app.services.ingest.biblioteca_pj import (
+    BibliotecaPJIngest,
+    BibliotecaDocument,
+    BibliotecaSearchResult,
+)
 
-__all__ = ["BoletinTDFScraper", "BoletinEdition", "NormaDocument"]
+__all__ = [
+    "BoletinTDFScraper",
+    "BoletinEdition",
+    "NormaDocument",
+    "BibliotecaPJIngest",
+    "BibliotecaDocument",
+    "BibliotecaSearchResult",
+]
+

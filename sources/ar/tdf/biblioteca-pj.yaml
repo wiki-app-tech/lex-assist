@@ -1,0 +1,116 @@
+# ==============================================================================
+# Ingest Configuration: Biblioteca del Poder Judicial de Tierra del Fuego, AeIAS
+# Sistema de Gestión Bibliotecaria: KOHA (v19.0504000)
+# ==============================================================================
+id: "ar-tdf-biblioteca-pj"
+name: "Biblioteca del Poder Judicial de Tierra del Fuego"
+institution: "Poder Judicial de la Provincia de Tierra del Fuego, Antártida e Islas del Atlántico Sur"
+jurisdiction: "AR-V" # ISO 3166-2:AR para Tierra del Fuego
+base_url: "https://biblioteca.justierradelfuego.gov.ar"
+catalog_system: "koha"
+koha_version: "19.0504000"
+parser_type: "hybrid" # Soporta 'api' (REST), 'scraping' (OPAC HTML), 'export' (unAPI/MARCXML) y 'rss'
+
+schedule:
+  frequency: "weekly"
+  cron: "0 3 * * 0" # Domingos a las 03:00 (hora local de Ushuaia)
+  timezone: "America/Argentina/Ushuaia"
+
+rate_limit:
+  requests_per_second: 1.0
+  delay_seconds: 1.5
+  max_retries: 3
+  retry_backoff: 2.0
+  timeout_seconds: 30
+
+client:
+  user_agent: "lex-assist-bot/0.1 (+https://github.com/wiki-app-tech/lex-assist)"
+  headers:
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,application/json,*/*;q=0.8"
+    Accept-Language: "es-AR,es;q=0.9,en;q=0.8"
+
+# ------------------------------------------------------------------------------
+# Configuración de API REST de Koha
+# Nota: La instancia expone Swagger OpenAPI 2.0 en /api/v1/, pero al ser Koha 19.05
+# no posee endpoints públicos /biblios (devuelven 404) y los privados exigen auth (401).
+# Se incluye para compatibilidad cuando el PJ habilite credenciales o actualice Koha.
+# ------------------------------------------------------------------------------
+api:
+  enabled: false # En Koha 19.05 los endpoints públicos /biblios no están disponibles
+  swagger_url: "https://biblioteca.justierradelfuego.gov.ar/api/v1/"
+  base_path: "/api/v1"
+  endpoints:
+    biblios: "/biblios"
+    public_biblios: "/public/biblios"
+    items: "/items"
+
+# ------------------------------------------------------------------------------
+# Endpoints web OPAC y servicios auxiliares (unAPI, Export, RSS)
+# ------------------------------------------------------------------------------
+endpoints:
+  search: "/cgi-bin/koha/opac-search.pl"
+  detail: "/cgi-bin/koha/opac-detail.pl"
+  export: "/cgi-bin/koha/opac-export.pl"
+  unapi: "/cgi-bin/koha/unapi"
+  rss: "/cgi-bin/koha/opac-search.pl?format=rss"
+
+# ------------------------------------------------------------------------------
+# Selectores CSS para scraping del OPAC
+# ------------------------------------------------------------------------------
+selectors:
+  # Listado de resultados
+  results_container: "table#searchresults"
+  item_row: "table#searchresults tr, td.bibliocol"
+  item_content: "td.bibliocol"
+  total_results: "#numresults, .searchresults span strong"
+  
+  # Campos individuales del registro en listado
+  title: "a.title"
+  title_resp_stmt: "span.title_resp_stmt"
+  detail_link: "a.title, a[href*='opac-detail.pl?biblionumber=']"
+  author: "span.author, p .author"
+  year_publisher: "span.publisher, .results_summary.publisher"
+  document_type: ".results_summary.type .results_material_type, [class*='itemtype_']"
+  availability: ".results_summary.availability"
+  coins_metadata: "span.Z3988"
+  
+  # Paginación
+  pagination: ".pagination, div.pages"
+  pagination_next: "a.nav[rel='next'], a.next, .pagination li.active + li a"
+  
+  # Vista de detalle (opac-detail.pl)
+  detail_title: "h1.title"
+  detail_author: "h5.author a, .record h5.author"
+  detail_publisher: ".results_summary.publisher"
+  detail_subjects: ".results_summary.subjects a"
+  detail_holdings_table: "table#holdingst"
+  detail_call_number: ".results_summary.availability .CallNumber"
+  detail_unapi_id: "abbr.unapi-id"
+
+# ------------------------------------------------------------------------------
+# Mapeo de códigos de tipo de material Koha a categorías estándar Lex-Assist
+# ------------------------------------------------------------------------------
+document_types:
+  BK: "libro"
+  LIB: "libro"
+  REV: "articulo_revista"
+  ART: "articulo"
+  JUR: "jurisprudencia"
+  SENT: "sentencia"
+  DOC: "documento"
+  DEFAULT: "bibliografia"
+
+# Categorías temáticas principales de búsqueda
+search_topics:
+  - id: "derecho-constitucional"
+    query: "derecho constitucional"
+  - id: "derecho-administrativo"
+    query: "derecho administrativo"
+  - id: "derecho-penal"
+    query: "derecho penal"
+  - id: "derecho-civil"
+    query: "derecho civil"
+  - id: "derecho-laboral"
+    query: "derecho laboral"
+  - id: "jurisprudencia-tdf"
+    query: "tierra del fuego superior tribunal"

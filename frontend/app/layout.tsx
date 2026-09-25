@@ -18,7 +18,12 @@ const lora = Lora({
 export const metadata: Metadata = {
   title: "lex-assist | Asistente de Lectura y Resumen Normativo TDF",
   description:
-    "Consulta, lectura y resumen inteligente de Boletines Oficiales, leyes, decretos y circulares de Tierra del Fuego, Argentina.",
+    "Consulta, lectura y resumen inteligente de Boletines Oficiales, leyes, decretos y biblioteca judicial de Tierra del Fuego, Argentina.",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/apple-icon.png",
+  },
 };
 
 export default function RootLayout({

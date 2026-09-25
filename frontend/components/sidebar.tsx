@@ -103,9 +103,13 @@ export function Sidebar({
       >
         {/* Brand & Jurisdiction Header */}
         <div className="flex h-16 items-center justify-between px-6 border-b border-border/80">
-          <div className="flex items-center space-x-2.5">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-serif font-bold text-lg border border-primary/20">
-              §
+          <div className="flex items-center space-x-3">
+            <div className="h-9 w-9 rounded-lg overflow-hidden border border-border/60 shadow-sm shrink-0 bg-black flex items-center justify-center">
+              <img
+                src="/logo.png"
+                alt="lex-assist logo"
+                className="h-full w-full object-cover"
+              />
             </div>
             <div>
               <span className="font-serif font-semibold tracking-tight text-lg text-foreground">

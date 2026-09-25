@@ -21,6 +21,13 @@ export function MobileHeader({ onOpenSidebar }: MobileHeaderProps) {
         >
           <Menu className="h-5 w-5" />
         </Button>
+        <div className="h-7 w-7 rounded-md overflow-hidden border border-border/60 shadow-sm shrink-0 bg-black flex items-center justify-center">
+          <img
+            src="/logo.png"
+            alt="lex-assist logo"
+            className="h-full w-full object-cover"
+          />
+        </div>
         <span className="font-serif font-bold text-base text-foreground tracking-tight">
           lex-assist
         </span>

@@ -18,6 +18,7 @@ import {
   FileText,
   Globe,
   Landmark,
+  HardDrive,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +27,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import type { DocumentItem } from "@/components/document-list";
+import { getDriveEmbedUrl } from "@/lib/driveBoletines";
 
 interface DocumentReaderProps {
   document: DocumentItem | null;
@@ -35,7 +37,7 @@ interface DocumentReaderProps {
 export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) {
   const [copied, setCopied] = React.useState(false);
   const [fontSize, setFontSize] = React.useState<"normal" | "large" | "xlarge">("normal");
-  const [viewMode, setViewMode] = React.useState<"text" | "live_web">("text");
+  const [viewMode, setViewMode] = React.useState<"text" | "live_web" | "drive_pdf">("text");
 
   // Reset view mode when document changes
   React.useEffect(() => {
@@ -167,6 +169,26 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
             </Button>
           )}
 
+          {/* Toggle Google Drive PDF preview for Drive Boletines */}
+          {isDrive && (
+            <Button
+              variant={viewMode === "drive_pdf" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode(viewMode === "drive_pdf" ? "text" : "drive_pdf")}
+              className={cn(
+                "h-8 text-xs space-x-1.5 transition-colors",
+                viewMode === "drive_pdf"
+                  ? "bg-cyan-600 hover:bg-cyan-700 text-white"
+                  : "border-cyan-500/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/10"
+              )}
+            >
+              <HardDrive className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">
+                {viewMode === "drive_pdf" ? "Ver Ficha IA" : "Visor PDF en Drive"}
+              </span>
+            </Button>
+          )}
+
           {/* Font scale buttons for editorial reading */}
           <div className="hidden sm:flex items-center rounded-md border border-border/80 p-0.5 mr-1">
             <Button
@@ -222,7 +244,21 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
             </Button>
           )}
 
-          {isLegis ? (
+          {isDrive ? (
+            (document.driveUrl || document.sourceUrl) && (
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="h-8 text-xs space-x-1.5 border-cyan-500/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/10"
+              >
+                <a href={document.driveUrl || document.sourceUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Drive</span>
+                </a>
+              </Button>
+            )
+          ) : isLegis ? (
             <Button
               variant="outline"
               size="sm"
@@ -250,8 +286,74 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
         </div>
       </div>
 
-      {/* Reader Body: Live Web View or Scrollable Content */}
-      {viewMode === "live_web" && isLegis ? (
+      {/* Reader Body: Live Web View, Drive PDF Viewer, or Scrollable Content */}
+      {viewMode === "drive_pdf" && isDrive ? (
+        <div className="flex-1 flex flex-col h-full p-3 sm:p-4 space-y-3 bg-muted/20 overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs bg-card/90 p-3 rounded-lg border border-border/80 shadow-sm gap-2">
+            <div className="flex items-center space-x-2 truncate">
+              <HardDrive className="h-4 w-4 text-cyan-600 dark:text-cyan-400 shrink-0" />
+              <span className="font-mono text-muted-foreground truncate">
+                {document.title} • {document.date}
+              </span>
+            </div>
+            <div className="flex items-center space-x-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setViewMode("text")}
+                className="h-7 text-xs border-border"
+              >
+                Volver a síntesis
+              </Button>
+              {document.pdfUrl && (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  asChild
+                  className="h-7 text-xs"
+                >
+                  <a href={document.pdfUrl} target="_blank" rel="noopener noreferrer">
+                    <FileDown className="h-3 w-3 mr-1" />
+                    Descargar PDF
+                  </a>
+                </Button>
+              )}
+              <Button
+                variant="default"
+                size="sm"
+                asChild
+                className="h-7 text-xs bg-cyan-600 hover:bg-cyan-700 text-white"
+              >
+                <a
+                  href={document.driveUrl || document.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Abrir en Google Drive
+                </a>
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex-1 rounded-lg border border-border/80 overflow-hidden bg-white shadow-sm flex flex-col">
+            {getDriveEmbedUrl(document.driveUrl || document.sourceUrl) ? (
+              <iframe
+                src={getDriveEmbedUrl(document.driveUrl || document.sourceUrl)!}
+                title={`Visor PDF ${document.title}`}
+                className="w-full h-full flex-1 border-0"
+                allow="autoplay"
+              />
+            ) : (
+              <div className="p-8 text-center space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Visualizador no disponible directamente. Podés abrirlo en Google Drive.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : viewMode === "live_web" && isLegis ? (
         <div className="flex-1 flex flex-col h-full p-3 sm:p-4 space-y-3 bg-muted/20 overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs bg-card/90 p-3 rounded-lg border border-border/80 shadow-sm gap-2">
             <div className="flex items-center space-x-2 truncate">
@@ -337,6 +439,42 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
               </div>
             )}
 
+            {/* Google Drive Official Header Card */}
+            {isDrive && (
+              <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/5 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2 text-xs font-semibold text-cyan-700 dark:text-cyan-300">
+                    <HardDrive className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                    <span>Boletín Oficial de Tierra del Fuego — Google Drive Oficial</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Edición digital {document.number} • {document.monthName || ""} {document.year || ""} {document.pageCount ? `• ${document.pageCount} páginas` : ""}
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2 shrink-0">
+                  <Button
+                    size="sm"
+                    onClick={() => setViewMode("drive_pdf")}
+                    className="h-8 text-xs bg-cyan-600 hover:bg-cyan-700 text-white shadow-sm space-x-1"
+                  >
+                    <HardDrive className="h-3.5 w-3.5" />
+                    <span>Ver PDF en Visor</span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    asChild
+                    className="h-8 text-xs border-cyan-500/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/10"
+                  >
+                    <a href={document.driveUrl || document.sourceUrl} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                      Drive
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Metadata & Title */}
             <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
@@ -383,6 +521,21 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
                   >
                     <Tag className="h-2.5 w-2.5 mr-1 text-primary/70" />
                     {sub}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Thematic topic tags for Drive Boletines */}
+            {document.topics && document.topics.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {document.topics.map((t, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center text-[10px] bg-cyan-500/10 text-cyan-800 dark:text-cyan-300 px-2.5 py-0.5 rounded-full border border-cyan-500/30 font-medium"
+                  >
+                    <Tag className="h-2.5 w-2.5 mr-1 text-cyan-600 dark:text-cyan-400" />
+                    {t}
                   </span>
                 ))}
               </div>

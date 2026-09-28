@@ -6,7 +6,11 @@ import { DocumentList, type DocumentItem } from "@/components/document-list";
 import { DocumentReader } from "@/components/document-reader";
 import { MobileHeader } from "@/components/mobile-header";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
+import { HardDrive } from "lucide-react";
 import sumarioLegisData from "@/data/sumario_legistdf.json";
+import { DRIVE_BOLETINES_DOCUMENTS } from "@/lib/driveBoletines";
+import { BoletinesThematicPanel } from "@/components/boletines-thematic-panel";
 
 // Transform sumario asuntos from LegisTDF into searchable DocumentItems
 const LEGIS_DOCUMENTS: DocumentItem[] = sumarioLegisData.asuntos.map((asunto) => ({
@@ -513,100 +517,8 @@ DIRECTIVAS CENTRALES:
 - Plazo máximo de 24 horas para la fijación de medidas de protección cautelar por parte del juez de turno.
 - Articulación con los servicios de salud y desarrollo social provincial.`
   },
-  // --- Boletines Oficiales descargados desde Google Drive ---
-  {
-    id: "boletin-drive-5545",
-    title: "Boletín Oficial N° 5545 - Ushuaia, Viernes 01 de Marzo de 2024",
-    category: "boletin_drive",
-    categoryLabel: "B.O. Drive",
-    number: "Edición N° 5545",
-    date: "01/03/2024",
-    organism: "Gobierno de Tierra del Fuego, AeIAS",
-    sourceUrl: "https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6",
-    sourceType: "boletin_drive",
-    aiSummary:
-      "Edición oficial completa de 254 páginas descargada e indexada desde Google Drive. Contiene el Decreto N° 281/24 (reestructuración del INFUETUR con nuevas Secretarías de Política Interna y Externa), edictos de licitaciones públicas de obras sanitarias y resoluciones de entes autárquicos.",
-    keyPoints: [
-      "Decreto N° 281/24: Designación de secretarios en el Instituto Fueguino de Turismo (INFUETUR).",
-      "Edictos de compras públicas y contrataciones de servicios provinciales.",
-      "Documento completo de 254 páginas archivado e indexado desde Google Drive.",
-      "Búsqueda por palabras clave con motor Whoosh habilitada."
-    ],
-    fullText: `BOLETÍN OFICIAL DE LA PROVINCIA DE TIERRA DEL FUEGO, ANTÁRTIDA E ISLAS DEL ATLÁNTICO SUR
-AÑO XXXIII - Ushuaia, Viernes 01 de Marzo de 2024 - N° 5545
-
-"Las Islas Malvinas, Georgias del Sur, Sandwich del Sur, y los espacios marítimos e insulares correspondientes son Argentinos"
-
-DECRETO N° 281/24 (16-02-24)
-VISTO: el Decreto Provincial 3186/23; y
-CONSIDERANDO:
-Que mediante el artículo 25 de la Ley Provincial N° 65, modificado por la Ley Provincial N° 1308, se establece que el Instituto Fueguino de Turismo contará con tres Secretarios, uno de Política Interna, otro de Política Externa y el tercero de Coordinación Estratégica, a propuesta del Presidente del mencionado Instituto.
-Por ello: EL GOBERNADOR DE LA PROVINCIA DE TIERRA DEL FUEGO, ANTÁRTIDA E ISLAS DEL ATLÁNTICO SUR DECRETA:
-ARTÍCULO 1°.- Desígnanse a los funcionarios que desempeñarán las secretarías ejecutivas en el Instituto Fueguino de Turismo.
-ARTÍCULO 2°.- Comuníquese, publíquese en el Boletín Oficial y archívese.
-
-ÍNDICE RESUMIDO DE LA EDICIÓN:
-- Decretos del Poder Ejecutivo Provincial (N° 270 a 302).
-- Resoluciones del Ministerio de Economía y Obras Públicas.
-- Licitaciones de la Dirección Provincial de Obras y Servicios Sanitarios (DPOSS).
-- Edictos judiciales y comerciales del Distrito Judicial Sur y Norte.`
-  },
-  {
-    id: "boletin-drive-5546",
-    title: "Boletín Oficial N° 5546 - Ushuaia, Lunes 04 de Marzo de 2024",
-    category: "boletin_drive",
-    categoryLabel: "B.O. Drive",
-    number: "Edición N° 5546",
-    date: "04/03/2024",
-    organism: "Ministerio de Producción y Ambiente • Ministerio de Bienestar",
-    sourceUrl: "https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6",
-    sourceType: "boletin_drive",
-    aiSummary:
-      "Edición oficial de 312 páginas procesada con PyMuPDF. Publica resoluciones conjuntas del Ministerio de Producción y Ambiente relativas a ordenamiento de bosques nativos, fiscalización pesquera en el Canal Beagle y convenios de fortalecimiento social.",
-    keyPoints: [
-      "Ministerio de Producción y Ambiente: Planes de manejo forestal sustentable.",
-      "Contrataciones y adquisiciones de equipamiento hospitalario.",
-      "Indexado en la base de datos PostgreSQL en la tabla 'boletines_drive'."
-    ],
-    fullText: `BOLETÍN OFICIAL DE LA PROVINCIA DE TIERRA DEL FUEGO, ANTÁRTIDA E ISLAS DEL ATLÁNTICO SUR
-AÑO XXXIII - Ushuaia, Lunes 04 de Marzo de 2024 - N° 5546
-
-SECCIONES OFICIALES:
-1. Actos del Poder Ejecutivo:
-   - Medidas de fomento productivo y pesca artesanal.
-   - Designaciones transitorias de personal en el área de salud pública.
-2. Resoluciones de la Agencia de Recaudación Fueguina (AREF):
-   - Nuevos regímenes de retención y percepción sobre actividades comerciales.
-3. Convenios Interjurisdiccionales con el Estado Nacional y municipios de Tolhuin y Río Grande.`
-  },
-  {
-    id: "boletin-drive-5547",
-    title: "Boletín Oficial N° 5547 - Ushuaia, Martes 05 de Marzo de 2024",
-    category: "boletin_drive",
-    categoryLabel: "B.O. Drive",
-    number: "Edición N° 5547",
-    date: "05/03/2024",
-    organism: "Ministerio de Jefatura de Gabinete • MOSP",
-    sourceUrl: "https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6",
-    sourceType: "boletin_drive",
-    aiSummary:
-      "Edición que publica el Decreto N° 303/24 y convocatorias a licitaciones públicas de infraestructura vial y edilicia en Ushuaia y Río Grande. Texto extraído íntegramente y buscable por Whoosh.",
-    keyPoints: [
-      "Decreto N° 303/24: Aprobación de convenios de asistencia vial invernal.",
-      "Licitaciones de la Dirección Provincial de Vialidad sobre Ruta Nacional N° 3.",
-      "Edictos sucesorios y de constitución de sociedades anónimas y de responsabilidad limitada."
-    ],
-    fullText: `BOLETÍN OFICIAL DE LA PROVINCIA DE TIERRA DEL FUEGO, ANTÁRTIDA E ISLAS DEL ATLÁNTICO SUR
-AÑO XXXIII - Ushuaia, Martes 05 de Marzo de 2024 - N° 5547
-
-DECRETO N° 303/24 (19-02-24)
-VISTO el expediente N° MJG-E-7523-2024 del Ministerio de Jefatura de Gabinete;
-CONSIDERANDO:
-Que resulta indispensable disponer de los recursos y maquinarias para el despeje de nieve y mantenimiento preventivo de rutas en la temporada invernal 2024.
-Por ello: EL GOBERNADOR DE LA PROVINCIA DECRETA:
-ARTÍCULO 1°.- Apruébase el plan de contingencia vial austral.
-ARTÍCULO 2°.- Comuníquese, publíquese y archívese.`
-  }
+  // --- Catálogo Oficial Completo de Boletines Oficiales (Google Drive 2024, 2025, 2026 - 653 Ediciones) ---
+  ...DRIVE_BOLETINES_DOCUMENTS,
 ];
 
 export default function HomePage() {
@@ -615,6 +527,7 @@ export default function HomePage() {
   const [selectedDoc, setSelectedDoc] = React.useState<DocumentItem | null>(ALL_DOCUMENTS[0]);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
   const [mobileView, setMobileView] = React.useState<"list" | "reader">("list");
+  const [driveViewMode, setDriveViewMode] = React.useState<"panel" | "reader">("panel");
 
   // Dynamic counts for each category
   const documentCounts = React.useMemo(() => {
@@ -656,7 +569,8 @@ export default function HomePage() {
         doc.number.toLowerCase().includes(q) ||
         (doc.author && doc.author.toLowerCase().includes(q)) ||
         (doc.callNumber && doc.callNumber.toLowerCase().includes(q)) ||
-        (doc.subjects && doc.subjects.some(s => s.toLowerCase().includes(q)));
+        (doc.subjects && doc.subjects.some(s => s.toLowerCase().includes(q))) ||
+        (doc.topics && doc.topics.some(t => t.toLowerCase().includes(q)));
 
       return matchCategory && matchSearch;
     });
@@ -669,6 +583,9 @@ export default function HomePage() {
 
   const handleSelectCategory = (cat: CategoryKey) => {
     setSelectedCategory(cat);
+    if (cat === "boletin_drive") {
+      setDriveViewMode("panel");
+    }
     // Auto-select first matching document in the newly selected category
     const matchingDocs = ALL_DOCUMENTS.filter(d => {
       if (cat === "todos") return true;
@@ -704,34 +621,81 @@ export default function HomePage() {
         </div>
 
         {/* Central & Right Columns Container */}
-        <main className="flex-1 flex overflow-hidden">
-          {/* Central Column: Document List */}
-          <div
-            className={`w-full lg:w-96 xl:w-[420px] flex-shrink-0 flex flex-col h-full ${
-              mobileView === "reader" ? "hidden lg:flex" : "flex"
-            }`}
-          >
-            <DocumentList
-              documents={filteredDocuments}
-              selectedDocId={selectedDoc?.id ?? null}
-              onSelectDocument={handleSelectDoc}
-              selectedCategory={selectedCategory}
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-            />
-          </div>
+        <main className="flex-1 flex overflow-hidden relative">
+          {selectedCategory === "boletin_drive" && driveViewMode === "panel" ? (
+            <div className="flex-1 flex flex-col h-full overflow-hidden">
+              <BoletinesThematicPanel
+                onSelectDocument={(doc) => {
+                  setSelectedDoc(doc);
+                  setDriveViewMode("reader");
+                  setMobileView("reader");
+                }}
+                selectedDocId={selectedDoc?.id}
+              />
+            </div>
+          ) : (
+            <>
+              {/* Central Column: Document List */}
+              <div
+                className={`w-full lg:w-96 xl:w-[420px] flex-shrink-0 flex flex-col h-full ${
+                  mobileView === "reader" ? "hidden lg:flex" : "flex"
+                }`}
+              >
+                {/* Switcher to return to panel if in boletin_drive */}
+                {selectedCategory === "boletin_drive" && (
+                  <div className="p-2.5 bg-cyan-500/10 border-b border-cyan-500/20 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-cyan-800 dark:text-cyan-300 flex items-center space-x-1.5">
+                      <HardDrive className="h-3.5 w-3.5" />
+                      <span>Boletines Drive (653)</span>
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDriveViewMode("panel")}
+                      className="h-7 text-xs border-cyan-500/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/10 space-x-1"
+                    >
+                      <span>Panel Temático</span>
+                    </Button>
+                  </div>
+                )}
+                <DocumentList
+                  documents={filteredDocuments}
+                  selectedDocId={selectedDoc?.id ?? null}
+                  onSelectDocument={handleSelectDoc}
+                  selectedCategory={selectedCategory}
+                  searchQuery={searchQuery}
+                  onSearchChange={setSearchQuery}
+                />
+              </div>
 
-          {/* Right Column: Editorial Document Reader */}
-          <div
-            className={`flex-1 flex flex-col h-full bg-background overflow-hidden ${
-              mobileView === "list" ? "hidden lg:flex" : "flex"
-            }`}
-          >
-            <DocumentReader
-              document={selectedDoc}
-              onBackMobile={() => setMobileView("list")}
-            />
-          </div>
+              {/* Right Column: Editorial Document Reader */}
+              <div
+                className={`flex-1 flex flex-col h-full bg-background overflow-hidden ${
+                  mobileView === "list" ? "hidden lg:flex" : "flex"
+                }`}
+              >
+                {selectedCategory === "boletin_drive" && (
+                  <div className="p-2 border-b border-border/80 bg-muted/30 flex items-center justify-between text-xs px-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDriveViewMode("panel")}
+                      className="h-7 text-xs text-muted-foreground hover:text-foreground space-x-1.5"
+                    >
+                      <span>← Volver al Panel Temático</span>
+                    </Button>
+                    <span className="text-[11px] font-mono text-muted-foreground">
+                      653 ediciones oficiales 2024-2026
+                    </span>
+                  </div>
+                )}
+                <DocumentReader
+                  document={selectedDoc}
+                  onBackMobile={() => setMobileView("list")}
+                />
+              </div>
+            </>
+          )}
         </main>
       </div>
     </div>

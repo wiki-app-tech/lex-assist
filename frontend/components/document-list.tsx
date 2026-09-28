@@ -49,6 +49,16 @@ export interface DocumentItem {
   kohaBiblionumber?: string;
   subjects?: string[];
   sourceType?: "boletin" | "biblioteca_pj" | "boletin_drive" | "legistdf";
+  year?: number;
+  month?: number;
+  monthName?: string;
+  editionNumber?: string;
+  pageCount?: number;
+  topics?: string[];
+  driveUrl?: string;
+  downloadUrl?: string;
+  isSeparata?: boolean;
+  hasLocalText?: boolean;
 }
 
 interface DocumentListProps {

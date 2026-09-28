@@ -54,13 +54,13 @@ export function Sidebar({
   isOpenMobile = false,
   onCloseMobile,
   documentCounts = {
-    todos: 260,
+    todos: 860,
     sumario_legis: 197,
     decretos: 18,
     resoluciones: 16,
     leyes: 6,
     licitaciones: 8,
-    boletin_drive: 7,
+    boletin_drive: 653,
     biblioteca: 8,
     biblioteca_libros: 2,
     biblioteca_doctrina: 2,
@@ -334,40 +334,61 @@ export function Sidebar({
               const isSelected = selectedCategory === cat.id;
 
               return (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    onSelectCategory(cat.id);
-                    if (onCloseMobile) onCloseMobile();
-                  }}
-                  className={cn(
-                    "w-full flex items-center justify-between px-3 py-1.5 rounded-md text-sm font-medium transition-all group",
-                    isSelected
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                  )}
-                >
-                  <div className="flex items-center space-x-2.5">
-                    <Icon
-                      className={cn(
-                        "h-4 w-4 transition-colors",
-                        isSelected ? "text-primary-foreground" : cat.color
-                      )}
-                    />
-                    <span className="text-xs">{cat.label}</span>
-                  </div>
-
-                  <span
+                <div key={cat.id} className="space-y-1">
+                  <button
+                    onClick={() => {
+                      onSelectCategory(cat.id);
+                      if (onCloseMobile) onCloseMobile();
+                    }}
                     className={cn(
-                      "text-[11px] px-1.5 py-0.5 rounded-full font-mono transition-colors",
+                      "w-full flex items-center justify-between px-3 py-1.5 rounded-md text-sm font-medium transition-all group",
                       isSelected
-                        ? "bg-white/20 text-white"
-                        : "bg-muted text-muted-foreground group-hover:bg-muted-foreground/15"
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                     )}
                   >
-                    {documentCounts[cat.id] ?? 0}
-                  </span>
-                </button>
+                    <div className="flex items-center space-x-2.5">
+                      <Icon
+                        className={cn(
+                          "h-4 w-4 transition-colors",
+                          isSelected ? "text-primary-foreground" : cat.color
+                        )}
+                      />
+                      <span className="text-xs">{cat.label}</span>
+                    </div>
+
+                    <span
+                      className={cn(
+                        "text-[11px] px-1.5 py-0.5 rounded-full font-mono transition-colors",
+                        isSelected
+                          ? "bg-white/20 text-white"
+                          : "bg-muted text-muted-foreground group-hover:bg-muted-foreground/15"
+                      )}
+                    >
+                      {documentCounts[cat.id] ?? 0}
+                    </span>
+                  </button>
+
+                  {/* Acceso directo a Google Drive debajo de boletin_drive */}
+                  {cat.id === "boletin_drive" && (
+                    <div className="px-1 pt-0.5">
+                      <a
+                        href="https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group/link flex items-center justify-between w-full px-2.5 py-1.5 rounded-md border border-cyan-500/25 bg-cyan-500/5 hover:bg-cyan-500/10 hover:border-cyan-500/40 transition-all text-xs"
+                      >
+                        <span className="flex items-center space-x-1.5 text-[11px] text-cyan-700 dark:text-cyan-300 font-medium truncate">
+                          <HardDrive className="h-3 w-3 shrink-0" />
+                          <span className="truncate">Google Drive TDF</span>
+                        </span>
+                        <span className="text-[10px] text-cyan-600/90 dark:text-cyan-400/90 shrink-0 font-medium group-hover/link:underline">
+                          Carpeta ↗
+                        </span>
+                      </a>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

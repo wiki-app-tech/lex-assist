@@ -17,6 +17,9 @@ import {
   Laptop,
   Building,
   HardDrive,
+  Landmark,
+  ScrollText,
+  ExternalLink,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +28,7 @@ import { cn } from "@/lib/utils";
 
 export type CategoryKey =
   | "todos"
+  | "sumario_legis"
   | "decretos"
   | "resoluciones"
   | "leyes"
@@ -50,7 +54,8 @@ export function Sidebar({
   isOpenMobile = false,
   onCloseMobile,
   documentCounts = {
-    todos: 63,
+    todos: 260,
+    sumario_legis: 197,
     decretos: 18,
     resoluciones: 16,
     leyes: 6,
@@ -147,7 +152,7 @@ export function Sidebar({
                 Tierra del Fuego, AeIAS
               </span>
               <span className="text-muted-foreground block text-[11px]">
-                Boletín Oficial & Biblioteca PJ
+                Boletín Oficial • Biblioteca PJ • LegisTDF
               </span>
             </div>
           </div>
@@ -186,6 +191,81 @@ export function Sidebar({
                 {documentCounts.todos ?? 0}
               </span>
             </button>
+          </div>
+
+          {/* Section: Poder Legislativo (LegisTDF) */}
+          <div className="space-y-1">
+            <div className="px-3 pb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400">
+              <span className="flex items-center space-x-1.5">
+                <Landmark className="h-3 w-3" />
+                <span>Poder Legislativo</span>
+              </span>
+              <a
+                href="https://buscar.legistdf.gob.ar/sumario_completo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-1 text-[9px] px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-700 dark:text-orange-300 hover:bg-orange-500/20 transition-colors"
+                title="Acceso directo al sitio oficial LegisTDF"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span>Sitio oficial</span>
+                <ExternalLink className="h-2.5 w-2.5" />
+              </a>
+            </div>
+
+            <button
+              onClick={() => {
+                onSelectCategory("sumario_legis");
+                if (onCloseMobile) onCloseMobile();
+              }}
+              className={cn(
+                "w-full flex items-center justify-between px-3 py-1.5 rounded-md text-sm font-medium transition-all group",
+                selectedCategory === "sumario_legis"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+              )}
+            >
+              <div className="flex items-center space-x-2.5">
+                <ScrollText
+                  className={cn(
+                    "h-4 w-4 transition-colors",
+                    selectedCategory === "sumario_legis"
+                      ? "text-primary-foreground"
+                      : "text-orange-600 dark:text-orange-400"
+                  )}
+                />
+                <span className="text-xs">Sumario de Asuntos</span>
+              </div>
+
+              <span
+                className={cn(
+                  "text-[11px] px-1.5 py-0.5 rounded-full font-mono transition-colors",
+                  selectedCategory === "sumario_legis"
+                    ? "bg-white/20 text-white"
+                    : "bg-muted text-muted-foreground group-hover:bg-muted-foreground/15"
+                )}
+              >
+                {documentCounts.sumario_legis ?? 197}
+              </span>
+            </button>
+
+            {/* Acceso directo al sitio oficial */}
+            <div className="px-1 pt-0.5">
+              <a
+                href="https://buscar.legistdf.gob.ar/sumario_completo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group/link flex items-center justify-between w-full px-2.5 py-1.5 rounded-md border border-orange-500/25 bg-orange-500/5 hover:bg-orange-500/10 hover:border-orange-500/40 transition-all text-xs"
+              >
+                <span className="flex items-center space-x-1.5 text-[11px] text-orange-700 dark:text-orange-300 font-medium truncate">
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                  <span className="truncate">buscar.legistdf.gob.ar</span>
+                </span>
+                <span className="text-[10px] text-orange-600/90 dark:text-orange-400/90 shrink-0 font-medium group-hover/link:underline">
+                  Oficial ↗
+                </span>
+              </a>
+            </div>
           </div>
 
           {/* Section: Biblioteca del Poder Judicial (Koha) */}

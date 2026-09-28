@@ -6,9 +6,50 @@ import { DocumentList, type DocumentItem } from "@/components/document-list";
 import { DocumentReader } from "@/components/document-reader";
 import { MobileHeader } from "@/components/mobile-header";
 import { ThemeToggle } from "@/components/theme-toggle";
+import sumarioLegisData from "@/data/sumario_legistdf.json";
 
-// Catálogo combinado: Boletín Oficial TDF y Biblioteca del Poder Judicial TDF (Koha)
+// Transform sumario asuntos from LegisTDF into searchable DocumentItems
+const LEGIS_DOCUMENTS: DocumentItem[] = sumarioLegisData.asuntos.map((asunto) => ({
+  id: asunto.id,
+  title: `${asunto.numero} - ${asunto.descripcion.length > 120 ? asunto.descripcion.slice(0, 117) + "..." : asunto.descripcion}`,
+  category: "sumario_legis" as const,
+  categoryLabel: asunto.tipo,
+  number: asunto.numero,
+  date: sumarioLegisData.fechaActualizacion,
+  organism: `Poder Legislativo TDF • ${asunto.origen}`,
+  author: asunto.origen,
+  sourceUrl: asunto.link || "https://buscar.legistdf.gob.ar/sumario_completo",
+  pdfUrl: sumarioLegisData.pdfOriginal,
+  sourceType: "legistdf" as const,
+  aiSummary: `Asunto parlamentario del Sumario de Asuntos Pendientes para la próxima sesión ordinaria de la Legislatura Provincial de Tierra del Fuego. Iniciativa de ${asunto.origen}: ${asunto.descripcion}`,
+  keyPoints: [
+    `Número de Asunto: ${asunto.numero}`,
+    `Iniciativa / Bloque: ${asunto.origen}`,
+    `Tipo de instrumento: ${asunto.tipo}`,
+    `Expediente oficial: ${asunto.link ? "Disponible para consulta legislativa" : "En trámite parlamentario"}`,
+  ],
+  fullText: `PODER LEGISLATIVO DE LA PROVINCIA DE TIERRA DEL FUEGO, ANTÁRTIDA E ISLAS DEL ATLÁNTICO SUR
+SUMARIO DE ASUNTOS PENDIENTES PARA PRÓXIMA SESIÓN
+Fecha de Carga: ${sumarioLegisData.fechaActualizacion}
+
+${asunto.numero}
+ORIGEN / BLOQUE: ${asunto.origen}
+TIPO DE INSTRUMENTO: ${asunto.tipo}
+
+DESCRIPCIÓN DEL ASUNTO:
+${asunto.descripcion}
+
+ENLACE OFICIAL AL EXPEDIENTE:
+${asunto.link || "https://buscar.legistdf.gob.ar/sumario_completo"}
+
+FUENTE OFICIAL:
+Sumario Completo LegisTDF: ${sumarioLegisData.sitioOficial}
+Descarga PDF Original: ${sumarioLegisData.pdfOriginal}`
+}));
+
+// Catálogo combinado: Boletín Oficial TDF, Biblioteca PJ (Koha) y Legislatura TDF (LegisTDF)
 const ALL_DOCUMENTS: DocumentItem[] = [
+  ...LEGIS_DOCUMENTS,
   // --- Normativa y Boletín Oficial ---
   {
     id: "tdf-decreto-142-2026",
@@ -579,6 +620,7 @@ export default function HomePage() {
   const documentCounts = React.useMemo(() => {
     const counts: Record<CategoryKey, number> = {
       todos: ALL_DOCUMENTS.length,
+      sumario_legis: ALL_DOCUMENTS.filter(d => d.category === "sumario_legis").length,
       decretos: ALL_DOCUMENTS.filter(d => d.category === "decretos").length,
       resoluciones: ALL_DOCUMENTS.filter(d => d.category === "resoluciones").length,
       leyes: ALL_DOCUMENTS.filter(d => d.category === "leyes").length,

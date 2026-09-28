@@ -1,7 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { Search, Sparkles, Calendar, Building2, BookMarked, User } from "lucide-react";
+import {
+  Search,
+  Sparkles,
+  Calendar,
+  Building2,
+  BookMarked,
+  User,
+  ExternalLink,
+  FileDown,
+  Landmark,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -18,6 +28,7 @@ export interface DocumentItem {
     | "leyes"
     | "licitaciones"
     | "boletin_drive"
+    | "sumario_legis"
     | "biblioteca_libros"
     | "biblioteca_doctrina"
     | "biblioteca_revistas"
@@ -37,7 +48,7 @@ export interface DocumentItem {
   branch?: string;
   kohaBiblionumber?: string;
   subjects?: string[];
-  sourceType?: "boletin" | "biblioteca_pj" | "boletin_drive";
+  sourceType?: "boletin" | "biblioteca_pj" | "boletin_drive" | "legistdf";
 }
 
 interface DocumentListProps {
@@ -61,6 +72,8 @@ export function DocumentList({
     switch (selectedCategory) {
       case "todos":
         return "Todas las fuentes";
+      case "sumario_legis":
+        return "Sumario Legislativo (LegisTDF)";
       case "boletin_drive":
         return "Boletines Oficiales (Drive)";
       case "biblioteca":
@@ -79,6 +92,7 @@ export function DocumentList({
   };
 
   const getBadgeVariant = (category: string) => {
+    if (category === "sumario_legis") return "legis";
     if (category === "boletin_drive") return "drive";
     if (category.startsWith("biblioteca_")) {
       const sub = category.replace("biblioteca_", "");
@@ -98,7 +112,11 @@ export function DocumentList({
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <h2 className="text-base font-semibold tracking-tight font-serif text-foreground">
-              {selectedCategory.startsWith("biblioteca") ? "Biblioteca Judicial Koha" : "Boletines & Normativa"}
+              {selectedCategory === "sumario_legis"
+                ? "Poder Legislativo TDF"
+                : selectedCategory.startsWith("biblioteca")
+                ? "Biblioteca Judicial Koha"
+                : "Boletines & Normativa"}
             </h2>
             <p className="text-xs text-muted-foreground">
               {documents.length} registros disponibles
@@ -115,12 +133,55 @@ export function DocumentList({
         <div className="relative">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Buscar por título, autor, signatura o materia..."
+            placeholder={
+              selectedCategory === "sumario_legis"
+                ? "Buscar por asunto (ej: 326), bloque, proyecto..."
+                : "Buscar por título, autor, signatura o materia..."
+            }
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-9 h-9 text-xs bg-card/60 focus:bg-background"
           />
         </div>
+
+        {/* Official Banner when LegisTDF is selected */}
+        {selectedCategory === "sumario_legis" && (
+          <div className="rounded-lg border border-orange-500/30 bg-orange-500/10 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-1.5 text-xs font-semibold text-orange-700 dark:text-orange-300">
+                <Landmark className="h-3.5 w-3.5" />
+                <span>Sumario de Asuntos Pendientes</span>
+              </div>
+              <Badge variant="outline" className="text-[10px] text-orange-600 border-orange-500/40 font-mono">
+                LegisTDF
+              </Badge>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-snug">
+              Asuntos para próxima sesión legislativa provincial publicados en el portal oficial LegisTDF.
+            </p>
+            <div className="flex items-center space-x-2 pt-1">
+              <a
+                href="https://buscar.legistdf.gob.ar/sumario_completo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 inline-flex items-center justify-center space-x-1.5 px-2.5 py-1.5 rounded-md bg-orange-600 hover:bg-orange-700 text-white text-[11px] font-medium transition-colors shadow-sm"
+              >
+                <span>Acceso al sitio oficial</span>
+                <ExternalLink className="h-3 w-3" />
+              </a>
+              <a
+                href="https://legistdf.gob.ar/lp/sumarios/PUBLICO/SUMARIO%20PENDIENTE.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-md border border-border bg-card hover:bg-muted text-[11px] text-foreground font-medium transition-colors"
+                title="Descargar PDF original del sumario"
+              >
+                <FileDown className="h-3 w-3 text-muted-foreground" />
+                <span>PDF</span>
+              </a>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Document Cards List */}

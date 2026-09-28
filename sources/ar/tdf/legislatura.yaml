@@ -1,0 +1,69 @@
+# ==============================================================================
+# Ingest Configuration: Poder Legislativo de Tierra del Fuego, AeIAS (LegisTDF)
+# ==============================================================================
+id: "ar-tdf-legislatura"
+name: "Poder Legislativo de Tierra del Fuego (LegisTDF)"
+jurisdiction: "AR-V" # ISO 3166-2:AR para Tierra del Fuego
+base_url: "https://buscar.legistdf.gob.ar"
+official_url: "https://legistdf.gob.ar"
+sumario_url: "https://buscar.legistdf.gob.ar/sumario_completo"
+pdf_sumario_url: "https://legistdf.gob.ar/lp/sumarios/PUBLICO/SUMARIO%20PENDIENTE.pdf"
+
+schedule:
+  frequency: "hourly"
+  cron: "0 * * * *" # Actualización periódica de asuntos parlamentarios
+  timezone: "America/Argentina/Ushuaia"
+
+rate_limit:
+  requests_per_second: 1.0
+  delay_seconds: 1.5
+  max_retries: 3
+  retry_backoff: 2.0
+  timeout_seconds: 30
+
+client:
+  user_agent: "lex-assist-bot/0.1 (+https://github.com/wiki-app-tech/lex-assist)"
+  headers:
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+    Accept-Language: "es-AR,es;q=0.9,en;q=0.8"
+
+# Secciones y endpoints legislativos
+endpoints:
+  - id: "sumario_completo"
+    name: "Sumario de Asuntos Pendientes para Próxima Sesión"
+    path: "/sumario_completo"
+    method: "GET"
+    parser_type: "html_table"
+    description: "Listado completo de asuntos parlamentarios pendientes de tratamiento"
+  - id: "asunto_detalle"
+    name: "Expediente del Asunto Legislativo"
+    base_path: "https://legistdf.gob.ar/ir_asunto.php"
+    params: ["t", "n", "y"]
+
+# Categorías parlamentarias detectadas
+categories:
+  - id: "proyectos_ley"
+    name: "Proyectos de Ley"
+    keywords: ["PROYECTO DE LEY", "PROY. DE LEY"]
+  - id: "proyectos_resolucion"
+    name: "Proyectos de Resolución"
+    keywords: ["PROYECTO DE RESOLUCIÓN", "PROY. DE RESOL.", "RESOLUCIÓN DE PRESIDENCIA"]
+  - id: "proyectos_declaracion"
+    name: "Proyectos de Declaración"
+    keywords: ["PROYECTO DE DECLARACIÓN", "PROY. DE DECLARACIÓN"]
+  - id: "dictamenes"
+    name: "Dictámenes de Comisión"
+    keywords: ["DICTAMEN DE COMISION", "DICTAMEN"]
+  - id: "decretos_convenios"
+    name: "Decretos y Convenios PEP"
+    keywords: ["P.E.P.", "DECRETO PROVINCIAL", "CONVENIO"]
+
+# Selectores CSS del sumario
+selectors:
+  table_rows: "table tr"
+  matter_number: "td.n"
+  matter_link: "td.n a"
+  matter_description: "td.d"
+  matter_desc_link: "td.d a"
+  session_date: ".head-txt div[style*='font-size:12.5px']"
+  pdf_download_button: "a.pdf-btn"

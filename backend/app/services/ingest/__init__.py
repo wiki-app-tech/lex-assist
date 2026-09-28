@@ -14,6 +14,9 @@ from backend.app.services.ingest.boletin_drive import (
     ExtractedBoletin,
     SearchHit,
 )
+from backend.app.services.ingest.sumario_legistdf import (
+    LegisTDFIngestService,
+)
 
 __all__ = [
     "BoletinTDFScraper",
@@ -25,5 +28,6 @@ __all__ = [
     "BoletinDriveService",
     "ExtractedBoletin",
     "SearchHit",
+    "LegisTDFIngestService",
 ]
 

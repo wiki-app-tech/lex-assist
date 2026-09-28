@@ -16,12 +16,15 @@ import {
   Tag,
   MapPin,
   FileText,
+  Globe,
+  Landmark,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import type { DocumentItem } from "@/components/document-list";
 
 interface DocumentReaderProps {
@@ -32,6 +35,12 @@ interface DocumentReaderProps {
 export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) {
   const [copied, setCopied] = React.useState(false);
   const [fontSize, setFontSize] = React.useState<"normal" | "large" | "xlarge">("normal");
+  const [viewMode, setViewMode] = React.useState<"text" | "live_web">("text");
+
+  // Reset view mode when document changes
+  React.useEffect(() => {
+    setViewMode("text");
+  }, [document?.id]);
 
   if (!document) {
     return (
@@ -73,6 +82,7 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
   };
 
   const getBadgeVariant = (category: string) => {
+    if (category === "sumario_legis") return "legis";
     if (category === "boletin_drive") return "drive";
     if (category.startsWith("biblioteca_")) {
       const sub = category.replace("biblioteca_", "");
@@ -86,6 +96,7 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
   };
 
   const isDrive = document.sourceType === "boletin_drive";
+  const isLegis = document.sourceType === "legistdf";
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
@@ -126,12 +137,38 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
               Google Drive • Whoosh
             </Badge>
           )}
+
+          {isLegis && (
+            <Badge variant="outline" className="text-[10px] text-orange-600 border-orange-500/40 font-mono">
+              LegisTDF • Sumario
+            </Badge>
+          )}
         </div>
 
         {/* Reader Actions */}
         <div className="flex items-center space-x-1 sm:space-x-2">
+          {/* Toggle live web view vs analysis for LegisTDF */}
+          {isLegis && (
+            <Button
+              variant={viewMode === "live_web" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode(viewMode === "live_web" ? "text" : "live_web")}
+              className={cn(
+                "h-8 text-xs space-x-1.5 transition-colors",
+                viewMode === "live_web"
+                  ? "bg-orange-600 hover:bg-orange-700 text-white"
+                  : "border-orange-500/30 text-orange-700 dark:text-orange-300 hover:bg-orange-500/10"
+              )}
+            >
+              <Globe className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">
+                {viewMode === "live_web" ? "Ver Ficha" : "Sitio Web Oficial"}
+              </span>
+            </Button>
+          )}
+
           {/* Font scale buttons for editorial reading */}
-          <div className="hidden sm:flex items-center rounded-md border border-border/80 p-0.5 mr-2">
+          <div className="hidden sm:flex items-center rounded-md border border-border/80 p-0.5 mr-1">
             <Button
               variant="ghost"
               size="sm"
@@ -185,7 +222,19 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
             </Button>
           )}
 
-          {document.sourceUrl && (
+          {isLegis ? (
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="h-8 text-xs space-x-1.5 border-orange-500/30 text-orange-700 dark:text-orange-300 hover:bg-orange-500/10"
+            >
+              <a href="https://buscar.legistdf.gob.ar/sumario_completo" target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Sitio Oficial</span>
+              </a>
+            </Button>
+          ) : document.sourceUrl ? (
             <Button
               variant="outline"
               size="sm"
@@ -197,15 +246,99 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
                 <span className="hidden sm:inline">{isKoha ? "Ficha Koha" : "Fuente"}</span>
               </a>
             </Button>
-          )}
+          ) : null}
         </div>
       </div>
 
-      {/* Reader Scrollable Content */}
-      <ScrollArea className="flex-1 px-4 sm:px-8 py-6">
-        <div className="max-w-3xl mx-auto space-y-6">
-          {/* Metadata & Title */}
-          <div className="space-y-3">
+      {/* Reader Body: Live Web View or Scrollable Content */}
+      {viewMode === "live_web" && isLegis ? (
+        <div className="flex-1 flex flex-col h-full p-3 sm:p-4 space-y-3 bg-muted/20 overflow-hidden">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between text-xs bg-card/90 p-3 rounded-lg border border-border/80 shadow-sm gap-2">
+            <div className="flex items-center space-x-2 truncate">
+              <Globe className="h-4 w-4 text-orange-600 dark:text-orange-400 shrink-0" />
+              <span className="font-mono text-muted-foreground truncate">
+                https://buscar.legistdf.gob.ar/sumario_completo
+              </span>
+            </div>
+            <div className="flex items-center space-x-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setViewMode("text")}
+                className="h-7 text-xs border-border"
+              >
+                Volver a ficha del asunto
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                asChild
+                className="h-7 text-xs bg-orange-600 hover:bg-orange-700 text-white"
+              >
+                <a
+                  href="https://buscar.legistdf.gob.ar/sumario_completo"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Abrir en nueva pestaña
+                </a>
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex-1 rounded-lg border border-border/80 overflow-hidden bg-white shadow-sm flex flex-col">
+            <iframe
+              src="https://buscar.legistdf.gob.ar/sumario_completo"
+              title="Sumario de Asuntos Pendientes - Legislatura de Tierra del Fuego"
+              className="w-full h-full flex-1 border-0"
+              loading="lazy"
+            />
+          </div>
+        </div>
+      ) : (
+        <ScrollArea className="flex-1 px-4 sm:px-8 py-6">
+          <div className="max-w-3xl mx-auto space-y-6">
+            {/* LegisTDF Official Header Card */}
+            {isLegis && (
+              <div className="rounded-lg border border-orange-500/30 bg-orange-500/5 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2 text-xs font-semibold text-orange-700 dark:text-orange-300">
+                    <Landmark className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                    <span>Sumario de Asuntos Pendientes — Legislatura TDF</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Publicado oficialmente en el portal LegisTDF para la próxima sesión ordinaria.
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2 shrink-0">
+                  <Button
+                    size="sm"
+                    asChild
+                    className="h-8 text-xs bg-orange-600 hover:bg-orange-700 text-white shadow-sm"
+                  >
+                    <a
+                      href="https://buscar.legistdf.gob.ar/sumario_completo"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                      Acceso al sitio oficial
+                    </a>
+                  </Button>
+                  {document.sourceUrl && document.sourceUrl.includes("ir_asunto.php") && (
+                    <Button variant="outline" size="sm" asChild className="h-8 text-xs border-orange-500/30">
+                      <a href={document.sourceUrl} target="_blank" rel="noopener noreferrer">
+                        Expediente ↗
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Metadata & Title */}
+            <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               <span className="flex items-center space-x-1">
                 <Calendar className="h-3.5 w-3.5 text-primary" />
@@ -351,6 +484,7 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
           </div>
         </div>
       </ScrollArea>
+      )}
     </div>
   );
 }

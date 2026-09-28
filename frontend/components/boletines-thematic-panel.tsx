@@ -23,11 +23,18 @@ import {
   Mountain,
   Anchor,
   ShieldCheck,
+  ShieldAlert,
   Home,
   Layers,
   Eye,
   X,
   FileText,
+  ScrollText,
+  Image as ImageIcon,
+  Maximize2,
+  Copy,
+  Check,
+  ZoomIn,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -39,15 +46,17 @@ import {
   DRIVE_CATALOG,
   DRIVE_BOLETINES_DOCUMENTS,
   THEMATIC_AREAS,
+  POLICIA_SECURITY_CASES,
   getDriveEmbedUrl,
 } from "@/lib/driveBoletines";
 
 interface BoletinesThematicPanelProps {
-  onSelectDocument: (doc: DocumentItem) => void;
+  onSelectDocument: (doc: DocumentItem, targetSection?: string) => void;
   selectedDocId?: string | null;
 }
 
 const TOPIC_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  "Seguridad & Policía de Tierra del Fuego": ShieldCheck,
   "Salud & Bienestar": HeartPulse,
   "Educación & Ciencia": GraduationCap,
   "Economía, Hacienda & AREF": Coins,
@@ -75,6 +84,11 @@ export function BoletinesThematicPanel({
 
   // Quick preview modal state
   const [previewDoc, setPreviewDoc] = React.useState<DocumentItem | null>(null);
+
+  // Facsimile & exact redaction lightbox modal state
+  const [captureModalDoc, setCaptureModalDoc] = React.useState<DocumentItem | null>(null);
+  const [copiedModalRedaction, setCopiedModalRedaction] = React.useState(false);
+  const [modalTab, setModalTab] = React.useState<"capture" | "redaction">("capture");
 
   // Calculate year counts
   const yearCounts = React.useMemo(() => {
@@ -142,7 +156,23 @@ export function BoletinesThematicPanel({
         const matchSummary = doc.aiSummary.toLowerCase().includes(q);
         const matchDate = doc.date.toLowerCase().includes(q);
         const matchTopics = doc.topics?.some((t) => t.toLowerCase().includes(q));
-        if (!matchTitle && !matchNumber && !matchSummary && !matchDate && !matchTopics) {
+        const matchPoliceSummary = doc.policeCaseSummary?.toLowerCase().includes(q);
+        const matchExactRedaction = doc.exactRedaction?.toLowerCase().includes(q);
+        const matchActNumber = doc.actNumber?.toLowerCase().includes(q);
+        const matchParties = doc.keyParties?.some((p) => p.toLowerCase().includes(q));
+        const matchLegalBasis = doc.legalBasis?.some((l) => l.toLowerCase().includes(q));
+        if (
+          !matchTitle &&
+          !matchNumber &&
+          !matchSummary &&
+          !matchDate &&
+          !matchTopics &&
+          !matchPoliceSummary &&
+          !matchExactRedaction &&
+          !matchActNumber &&
+          !matchParties &&
+          !matchLegalBasis
+        ) {
           return false;
         }
       }
@@ -431,6 +461,88 @@ export function BoletinesThematicPanel({
           </div>
         </div>
 
+        {/* SPOTLIGHT FILTER TAG: Seguridad & Policía de Tierra del Fuego */}
+        <div className="rounded-xl border border-blue-500/35 bg-gradient-to-r from-blue-600/10 via-sky-600/5 to-indigo-600/10 p-3 sm:p-4 space-y-2.5 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center space-x-2.5">
+              <div className="h-8 w-8 rounded-lg bg-blue-600/20 text-blue-700 dark:text-blue-300 border border-blue-500/40 flex items-center justify-center shrink-0">
+                <ShieldCheck className="h-4 w-4" />
+              </div>
+              <div className="space-y-0.5">
+                <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-900 dark:text-blue-200">
+                    Etiqueta de Búsqueda: Seguridad & Policía de Tierra del Fuego
+                  </span>
+                  <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-1.5 py-0 font-mono">
+                    {topicCounts["Seguridad & Policía de Tierra del Fuego"] || 6} ediciones indexadas
+                  </Badge>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Actos administrativos, sumarios policiales, pases a retiro por incapacidad, ascensos extraordinarios, equipamiento y redacción oficial de la Policía Provincial y fuerzas de seguridad de TDF.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 shrink-0">
+              <Button
+                variant={selectedTopic === "Seguridad & Policía de Tierra del Fuego" ? "default" : "outline"}
+                size="sm"
+                onClick={() =>
+                  setSelectedTopic(
+                    selectedTopic === "Seguridad & Policía de Tierra del Fuego"
+                      ? "all"
+                      : "Seguridad & Policía de Tierra del Fuego"
+                  )
+                }
+                className={cn(
+                  "h-8 text-xs space-x-1.5 transition-all shadow-xs",
+                  selectedTopic === "Seguridad & Policía de Tierra del Fuego"
+                    ? "bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm"
+                    : "border-blue-500/40 text-blue-800 dark:text-blue-300 hover:bg-blue-500/10"
+                )}
+              >
+                <ShieldCheck className="h-3.5 w-3.5" />
+                <span>
+                  {selectedTopic === "Seguridad & Policía de Tierra del Fuego"
+                    ? "Filtro Policía Activo"
+                    : "Filtrar por Policía & Seguridad"}
+                </span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Quick chips to jump directly to specific police cases and facsimiles */}
+          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-blue-500/20 text-[11px]">
+            <span className="text-muted-foreground font-medium text-[10px] uppercase tracking-wider mr-1 flex items-center space-x-1">
+              <Sparkles className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+              <span>Casos con resumen & facsímil oficial:</span>
+            </span>
+            {POLICIA_SECURITY_CASES.map((caso) => {
+              const isActive =
+                searchQuery === caso.edition_number || searchQuery === caso.act_number;
+              return (
+                <button
+                  key={caso.id}
+                  onClick={() => {
+                    setSelectedTopic("Seguridad & Policía de Tierra del Fuego");
+                    setSearchQuery(caso.edition_number);
+                  }}
+                  className={cn(
+                    "inline-flex items-center space-x-1 px-2.5 py-1 rounded-full border text-[11px] font-mono transition-all",
+                    isActive
+                      ? "bg-blue-600 text-white border-blue-600 font-bold shadow-xs scale-105"
+                      : "bg-card/90 text-blue-900 dark:text-blue-200 border-blue-500/30 hover:bg-blue-500/15"
+                  )}
+                  title={`${caso.title} • ${caso.organism}`}
+                >
+                  <ShieldCheck className="h-2.5 w-2.5 text-blue-600 dark:text-blue-400" />
+                  <span>{caso.act_number} (B.O. {caso.edition_number})</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         {/* Row 4: Thematic Topics Selector */}
         <div className="space-y-1.5 pt-1">
           <div className="flex items-center justify-between text-xs">
@@ -549,7 +661,8 @@ export function BoletinesThematicPanel({
                   key={doc.id}
                   className={cn(
                     "flex flex-col justify-between border transition-all duration-200 hover:shadow-md hover:border-cyan-500/50 relative overflow-hidden bg-card/70",
-                    isSelected && "ring-2 ring-primary border-primary bg-primary/5"
+                    isSelected && "ring-2 ring-primary border-primary bg-primary/5",
+                    doc.policeCaseSummary && "border-blue-500/35 hover:border-blue-500/60"
                   )}
                 >
                   <CardHeader className="p-4 sm:p-5 pb-3 space-y-2.5">
@@ -567,6 +680,12 @@ export function BoletinesThematicPanel({
                             Separata
                           </Badge>
                         )}
+                        {doc.policeCaseSummary && (
+                          <Badge className="bg-blue-600/20 text-blue-900 dark:text-blue-200 border-blue-600/40 text-[10px] font-semibold flex items-center space-x-1">
+                            <ShieldCheck className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                            <span>Policía & Seguridad</span>
+                          </Badge>
+                        )}
                       </div>
 
                       {doc.pageCount ? (
@@ -577,16 +696,24 @@ export function BoletinesThematicPanel({
                     </div>
 
                     {/* Title */}
-                    <CardTitle className="font-serif text-base sm:text-lg font-semibold leading-snug line-clamp-2 text-foreground hover:text-primary transition-colors cursor-pointer"
+                    <CardTitle
+                      className="font-serif text-base sm:text-lg font-semibold leading-snug line-clamp-2 text-foreground hover:text-primary transition-colors cursor-pointer"
                       onClick={() => onSelectDocument(doc)}
                     >
                       {doc.title}
                     </CardTitle>
 
-                    {/* Publication Date */}
-                    <div className="flex items-center space-x-1.5 text-xs text-muted-foreground">
-                      <Calendar className="h-3.5 w-3.5 text-primary shrink-0" />
-                      <span>Fecha: {doc.date}</span>
+                    {/* Publication Date & Act Info */}
+                    <div className="flex items-center justify-between text-xs text-muted-foreground gap-2 flex-wrap">
+                      <div className="flex items-center space-x-1.5">
+                        <Calendar className="h-3.5 w-3.5 text-primary shrink-0" />
+                        <span>Fecha: {doc.date}</span>
+                      </div>
+                      {doc.actNumber && (
+                        <span className="font-mono text-[10px] font-bold text-blue-800 dark:text-blue-300 bg-blue-500/10 px-1.5 py-0.5 rounded border border-blue-500/25">
+                          {doc.actNumber}
+                        </span>
+                      )}
                     </div>
 
                     {/* Thematic Badges */}
@@ -615,24 +742,98 @@ export function BoletinesThematicPanel({
                   </CardHeader>
 
                   <CardContent className="p-4 sm:p-5 pt-0 space-y-3 flex-1 flex flex-col justify-between">
-                    {/* Summary */}
-                    <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3 font-sans">
-                      {doc.aiSummary}
-                    </p>
+                    {/* Police Case Box or Generic Summary */}
+                    {doc.policeCaseSummary ? (
+                      <div className="space-y-2">
+                        <div className="rounded-lg border border-blue-500/35 bg-blue-500/10 p-3 space-y-2">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className="text-[11px] font-bold text-blue-950 dark:text-blue-200 flex items-center space-x-1.5">
+                              <ShieldAlert className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                              <span>Síntesis del Caso Policial / Seguridad:</span>
+                            </span>
+                            {doc.captureImageUrl && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCaptureModalDoc(doc);
+                                  setModalTab("capture");
+                                }}
+                                className="inline-flex items-center space-x-1 text-[10px] text-blue-800 dark:text-blue-300 font-semibold bg-blue-500/20 hover:bg-blue-500/30 px-2 py-0.5 rounded border border-blue-500/40 transition-colors"
+                                title="Ver captura facsímil oficial de la página"
+                              >
+                                <ImageIcon className="h-3 w-3" />
+                                <span>Ver Facsímil</span>
+                              </button>
+                            )}
+                          </div>
+
+                          <p className="text-xs text-foreground/90 leading-relaxed font-sans">
+                            {doc.policeCaseSummary}
+                          </p>
+
+                          {doc.keyParties && doc.keyParties.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-1 pt-1 border-t border-blue-500/20 text-[10px]">
+                              <span className="text-muted-foreground font-medium uppercase tracking-wider">Partes:</span>
+                              {doc.keyParties.map((p, idx) => (
+                                <span key={idx} className="font-mono bg-blue-500/20 text-blue-950 dark:text-blue-200 px-1.5 py-0.2 rounded">
+                                  {p}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      /* Generic Summary */
+                      <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3 font-sans">
+                        {doc.aiSummary}
+                      </p>
+                    )}
 
                     {/* Actions bar */}
                     <div className="pt-3 border-t border-border/60 flex items-center justify-between gap-1.5">
-                      <div className="flex items-center space-x-1">
-                        {/* Open in Lex-Assist Reader */}
-                        <Button
-                          variant={isSelected ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => onSelectDocument(doc)}
-                          className="h-8 text-xs space-x-1"
-                        >
-                          <BookOpen className="h-3 w-3" />
-                          <span>Ver Ficha</span>
-                        </Button>
+                      <div className="flex items-center space-x-1 flex-wrap gap-y-1">
+                        {/* Direct Button to exact wording for police & security cases */}
+                        {(doc.exactRedaction || doc.policeCaseSummary) ? (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => onSelectDocument(doc, "redaccion-oficial")}
+                            className="h-8 text-xs space-x-1.5 bg-blue-600 hover:bg-blue-700 text-white shadow-xs font-semibold"
+                            title="Ir directamente a la redacción oficial del caso en el boletín"
+                          >
+                            <ScrollText className="h-3.5 w-3.5" />
+                            <span>Encontrar Redacción</span>
+                          </Button>
+                        ) : (
+                          <Button
+                            variant={isSelected ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => onSelectDocument(doc)}
+                            className="h-8 text-xs space-x-1"
+                          >
+                            <BookOpen className="h-3 w-3" />
+                            <span>Ver Ficha</span>
+                          </Button>
+                        )}
+
+                        {/* Facsimile capture modal button */}
+                        {doc.captureImageUrl && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setCaptureModalDoc(doc);
+                              setModalTab("capture");
+                            }}
+                            className="h-8 text-xs px-2 space-x-1 border-blue-500/40 text-blue-800 dark:text-blue-300 hover:bg-blue-500/10"
+                            title="Ver captura facsímil del documento"
+                          >
+                            <ImageIcon className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Captura</span>
+                          </Button>
+                        )}
 
                         {/* Quick preview modal button */}
                         <Button
@@ -810,6 +1011,195 @@ export function BoletinesThematicPanel({
                       </a>
                     </Button>
                   )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LIGHTBOX MODAL: Facsímil Oficial & Redacción Exacta del Caso Policial */}
+      {captureModalDoc && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in">
+          <div className="bg-background rounded-xl border border-blue-500/40 shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-4 border-b border-border flex items-center justify-between gap-3 bg-gradient-to-r from-blue-600/15 via-blue-500/10 to-transparent">
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                  <Badge variant="drive" className="text-xs font-mono font-bold">
+                    {captureModalDoc.number}
+                  </Badge>
+                  {captureModalDoc.actNumber && (
+                    <Badge variant="outline" className="border-blue-500/40 text-blue-800 dark:text-blue-300 text-xs font-semibold">
+                      {captureModalDoc.actNumber}
+                    </Badge>
+                  )}
+                  <Badge variant="outline" className="text-xs">
+                    {captureModalDoc.date}
+                  </Badge>
+                  <Badge className="bg-blue-600/20 text-blue-900 dark:text-blue-200 border-blue-600/40 text-xs">
+                    Policía & Seguridad TDF
+                  </Badge>
+                </div>
+                <h3 className="font-serif text-base sm:text-lg font-bold text-foreground line-clamp-1">
+                  {captureModalDoc.title}
+                </h3>
+              </div>
+
+              <div className="flex items-center space-x-2 shrink-0">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const d = captureModalDoc;
+                    setCaptureModalDoc(null);
+                    onSelectDocument(d, "redaccion-oficial");
+                  }}
+                  className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white space-x-1.5 shadow-sm font-semibold"
+                >
+                  <ScrollText className="h-3.5 w-3.5" />
+                  <span>Abrir en Lector Completo</span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setCaptureModalDoc(null)}
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Modal Switcher: Facsímil Oficial vs Redacción */}
+            <div className="px-4 py-2 border-b border-border/80 bg-muted/40 flex items-center justify-between text-xs flex-wrap gap-2">
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant={modalTab === "capture" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setModalTab("capture")}
+                  className={cn(
+                    "h-7 text-xs space-x-1.5",
+                    modalTab === "capture" ? "bg-blue-600 hover:bg-blue-700 text-white" : ""
+                  )}
+                >
+                  <ImageIcon className="h-3.5 w-3.5" />
+                  <span>Facsímil / Captura Oficial</span>
+                </Button>
+                <Button
+                  variant={modalTab === "redaction" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setModalTab("redaction")}
+                  className={cn(
+                    "h-7 text-xs space-x-1.5",
+                    modalTab === "redaction" ? "bg-blue-600 hover:bg-blue-700 text-white" : ""
+                  )}
+                >
+                  <ScrollText className="h-3.5 w-3.5" />
+                  <span>Redacción Textual Verbatim</span>
+                </Button>
+              </div>
+
+              {modalTab === "redaction" && captureModalDoc.exactRedaction && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(captureModalDoc.exactRedaction || "");
+                    setCopiedModalRedaction(true);
+                    setTimeout(() => setCopiedModalRedaction(false), 2000);
+                  }}
+                  className="h-7 text-xs space-x-1"
+                >
+                  {copiedModalRedaction ? (
+                    <>
+                      <Check className="h-3 w-3 text-emerald-600" />
+                      <span>Copiado al portapapeles</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3 w-3" />
+                      <span>Copiar Redacción</span>
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-muted/20">
+              {modalTab === "capture" && captureModalDoc.captureImageUrl ? (
+                <div className="flex flex-col items-center justify-center space-y-4 max-w-4xl mx-auto">
+                  <div className="rounded-lg border border-blue-500/30 bg-blue-500/10 p-3 text-xs text-muted-foreground text-center w-full">
+                    <p className="font-semibold text-blue-900 dark:text-blue-200">
+                      Evidencia Documental Oficial • Facsímil del Boletín N° {captureModalDoc.editionNumber}
+                    </p>
+                    <p className="text-[11px] mt-0.5">
+                      Esta captura digital de alta resolución permite verificar la redacción impresa fiel en caso de dificultades o caracteres OCR defectuosos.
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-border/80 overflow-hidden shadow-2xl bg-white dark:bg-zinc-950 p-2 max-w-3xl w-full flex items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={captureModalDoc.captureImageUrl}
+                      alt={`Facsímil Oficial ${captureModalDoc.number}`}
+                      className="w-full h-auto object-contain max-h-[68vh] rounded border border-border/40"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2 pt-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="h-8 text-xs space-x-1.5"
+                    >
+                      <a
+                        href={captureModalDoc.captureImageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        <span>Ver Imagen en Alta Resolución</span>
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="max-w-3xl mx-auto space-y-4">
+                  {/* Summary Box */}
+                  <div className="rounded-lg border border-blue-500/35 bg-blue-500/10 p-4 space-y-2">
+                    <div className="flex items-center space-x-2 text-xs font-bold text-blue-900 dark:text-blue-200">
+                      <ShieldCheck className="h-4 w-4 text-blue-600" />
+                      <span>{captureModalDoc.actNumber || "Norma Policial"} • Resumen Analítico Oficial</span>
+                    </div>
+                    <p className="text-sm text-foreground leading-relaxed">
+                      {captureModalDoc.policeCaseSummary}
+                    </p>
+                    {captureModalDoc.legalBasis && (
+                      <div className="pt-2 border-t border-blue-500/20 text-xs text-muted-foreground space-y-1">
+                        <span className="font-semibold text-[11px] uppercase tracking-wider text-blue-800 dark:text-blue-300">
+                          Fundamentos Legales:
+                        </span>
+                        <ul className="list-disc pl-4 space-y-0.5 text-[11px]">
+                          {captureModalDoc.legalBasis.map((l, idx) => (
+                            <li key={idx}>{l}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Exact Wording Box */}
+                  <div className="rounded-lg border border-border/80 bg-card p-5 space-y-3 font-serif shadow-sm">
+                    <div className="flex items-center justify-between text-xs font-mono uppercase text-muted-foreground border-b border-border/60 pb-2">
+                      <span className="font-semibold text-foreground">Redacción Oficial del Caso (Texto del Boletín)</span>
+                      <span className="text-[10px] text-primary">Transcripción Oficial</span>
+                    </div>
+                    <pre className="text-xs sm:text-sm font-serif leading-relaxed whitespace-pre-wrap text-foreground select-text font-normal">
+                      {captureModalDoc.exactRedaction || captureModalDoc.fullText}
+                    </pre>
+                  </div>
                 </div>
               )}
             </div>

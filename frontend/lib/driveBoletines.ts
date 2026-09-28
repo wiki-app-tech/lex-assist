@@ -1,5 +1,27 @@
 import type { DocumentItem } from "@/components/document-list";
 import catalogData from "@/data/boletines_drive_catalog.json";
+import seguridadPoliciaCasos from "@/data/seguridad_policia_casos.json";
+
+export interface PoliceSecurityCase {
+  id: string;
+  edition_number: string;
+  edition_date: string;
+  year: number;
+  month: number;
+  month_name: string;
+  page_number: number;
+  act_type: string;
+  act_number: string;
+  organism: string;
+  title: string;
+  case_summary: string;
+  exact_redaction: string;
+  key_parties: string[];
+  legal_basis: string[];
+  capture_image_url?: string;
+  drive_url: string;
+  download_url: string;
+}
 
 export interface DriveBoletinRaw {
   id: string;
@@ -30,8 +52,18 @@ export interface DriveCatalogStructure {
 }
 
 export const DRIVE_CATALOG: DriveCatalogStructure = catalogData as DriveCatalogStructure;
+export const POLICIA_SECURITY_CASES: PoliceSecurityCase[] = seguridadPoliciaCasos as PoliceSecurityCase[];
 
 export const THEMATIC_AREAS = [
+  {
+    id: "Seguridad & Policía de Tierra del Fuego",
+    label: "Seguridad & Policía de Tierra del Fuego",
+    shortLabel: "Seguridad & Policía",
+    color: "blue",
+    bgClass: "bg-blue-600/15 text-blue-900 dark:text-blue-200 border-blue-600/40",
+    badgeClass: "bg-blue-600/20 text-blue-900 dark:text-blue-200 border-blue-600/40 font-semibold",
+    isFeatured: true,
+  },
   {
     id: "Salud & Bienestar",
     label: "Salud & Bienestar",
@@ -126,23 +158,72 @@ export function mapDriveBoletinToDocumentItem(b: DriveBoletinRaw): DocumentItem 
     ? b.edition_date.split("-").reverse().join("/")
     : `${b.month_name} ${b.year}`;
 
+  // Find if there is a curated police & security case for this edition
+  const curatedPoliceCase = POLICIA_SECURITY_CASES.find(
+    (c) => c.edition_number === b.edition_number
+  );
+
+  // Check if text touches police or security matters
+  const fullContent = (b.summary + " " + b.sample_text).toLowerCase();
+  const isPoliceRelated =
+    Boolean(curatedPoliceCase) ||
+    b.topics.includes("Seguridad & Justicia") ||
+    fullContent.includes("polic") ||
+    fullContent.includes("seguridad") ||
+    fullContent.includes("penitenciario") ||
+    fullContent.includes("comisar");
+
+  const topicsList = [...b.topics];
+  if (isPoliceRelated && !topicsList.includes("Seguridad & Policía de Tierra del Fuego")) {
+    topicsList.unshift("Seguridad & Policía de Tierra del Fuego");
+  }
+
   const keyPoints: string[] = [
     `Edición Oficial N° ${b.edition_number} (${b.month_name} ${b.year})`,
     `Extensión documental: ${b.page_count} páginas`,
-    `Ejes temáticos: ${b.topics.length > 0 ? b.topics.join(" • ") : "Actos Administrativos Generales"}`,
+    `Ejes temáticos: ${topicsList.length > 0 ? topicsList.join(" • ") : "Actos Administrativos Generales"}`,
     `Fuente: Google Drive Oficial del Gobierno de Tierra del Fuego`,
-    b.is_separata ? "Tipo de publicación: Separata Especial" : "Edición General Ordinaria",
   ];
+
+  if (curatedPoliceCase) {
+    keyPoints.unshift(
+      `Caso de Seguridad & Policía: ${curatedPoliceCase.title} (${curatedPoliceCase.act_number})`
+    );
+    keyPoints.push(`Evidencia documental: Facsímil/Captura oficial en página ${curatedPoliceCase.page_number}`);
+  }
+
+  // Extract a verbatim snippet if police related
+  let exactRedaction = curatedPoliceCase ? curatedPoliceCase.exact_redaction : "";
+  if (!exactRedaction && isPoliceRelated) {
+    const lines = b.sample_text.split("\n");
+    const matchingLines: string[] = [];
+    let capturing = false;
+    for (const l of lines) {
+      const lower = l.toLowerCase();
+      if (lower.includes("polic") || lower.includes("seguridad") || lower.includes("decreto") || lower.includes("resoluc")) {
+        capturing = true;
+      }
+      if (capturing && l.trim()) {
+        matchingLines.push(l.trim());
+        if (matchingLines.length >= 8) break;
+      }
+    }
+    exactRedaction = matchingLines.length > 0 ? matchingLines.join("\n") : b.sample_text.slice(0, 600);
+  }
+
+  const summary = curatedPoliceCase
+    ? `${curatedPoliceCase.case_summary}\n\n[Resumen General de la Edición]: ${b.summary}`
+    : b.summary;
 
   return {
     id: b.id,
-    title: b.title,
+    title: curatedPoliceCase ? `${b.title} — [${curatedPoliceCase.title}]` : b.title,
     category: "boletin_drive",
     categoryLabel: b.is_separata ? "Separata B.O." : "B.O. Drive",
     number: `B.O. N° ${b.edition_number}`,
     date: formattedDate,
-    organism: "Gobierno de la Provincia de Tierra del Fuego, AeIAS",
-    aiSummary: b.summary,
+    organism: curatedPoliceCase ? curatedPoliceCase.organism : "Gobierno de la Provincia de Tierra del Fuego, AeIAS",
+    aiSummary: summary,
     sourceUrl: b.drive_url,
     pdfUrl: b.download_url,
     sourceType: "boletin_drive",
@@ -152,8 +233,26 @@ PROVINCIA DE TIERRA DEL FUEGO, ANTÁRTIDA E ISLAS DEL ATLÁNTICO SUR
 Edición: ${b.edition_number} | Fecha de Publicación: ${formattedDate}
 Páginas totales: ${b.page_count}
 
+${curatedPoliceCase ? `======================================================================
+CASO DESTACADO DE SEGURIDAD Y POLICÍA DE TIERRA DEL FUEGO:
+${curatedPoliceCase.title.toUpperCase()}
+ORGANISMO: ${curatedPoliceCase.organism}
+NORMA: ${curatedPoliceCase.act_number} (Página ${curatedPoliceCase.page_number})
+
+SÍNTESIS DEL CASO:
+${curatedPoliceCase.case_summary}
+
+REDACCIÓN OFICIAL DEL CASO (TEXTO EXACTO DEL BOLETÍN):
+${curatedPoliceCase.exact_redaction}
+
+PARTES E INTERVINIENTES:
+${curatedPoliceCase.key_parties.map((p) => `• ${p}`).join("\n")}
+
+FUNDAMENTOS LEGALES:
+${curatedPoliceCase.legal_basis.map((l) => `• ${l}`).join("\n")}
+======================================================================\n` : ""}
 EJES TEMÁTICOS IDENTIFICADOS:
-${b.topics.length > 0 ? b.topics.map((t) => `• ${t}`).join("\n") : "• Actos Administrativos Generales del Poder Ejecutivo y Entes Descentralizados"}
+${topicsList.length > 0 ? topicsList.map((t) => `• ${t}`).join("\n") : "• Actos Administrativos Generales del Poder Ejecutivo y Entes Descentralizados"}
 
 RESUMEN ANALÍTICO DE LA EDICIÓN:
 ${b.summary}
@@ -169,11 +268,17 @@ ${b.sample_text}`,
     monthName: b.month_name,
     editionNumber: b.edition_number,
     pageCount: b.page_count,
-    topics: b.topics,
+    topics: topicsList,
     driveUrl: b.drive_url,
     downloadUrl: b.download_url,
     isSeparata: b.is_separata,
     hasLocalText: b.has_local_text,
+    policeCaseSummary: curatedPoliceCase ? curatedPoliceCase.case_summary : isPoliceRelated ? "Acto de seguridad pública o policía provincial indexado en la edición." : undefined,
+    exactRedaction: exactRedaction || undefined,
+    captureImageUrl: curatedPoliceCase ? curatedPoliceCase.capture_image_url : undefined,
+    actNumber: curatedPoliceCase ? curatedPoliceCase.act_number : undefined,
+    keyParties: curatedPoliceCase ? curatedPoliceCase.key_parties : undefined,
+    legalBasis: curatedPoliceCase ? curatedPoliceCase.legal_basis : undefined,
   };
 }
 

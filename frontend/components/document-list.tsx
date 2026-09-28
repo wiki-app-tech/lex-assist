@@ -11,6 +11,8 @@ import {
   ExternalLink,
   FileDown,
   Landmark,
+  ShieldCheck,
+  Image as ImageIcon,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +61,12 @@ export interface DocumentItem {
   downloadUrl?: string;
   isSeparata?: boolean;
   hasLocalText?: boolean;
+  policeCaseSummary?: string;
+  exactRedaction?: string;
+  captureImageUrl?: string;
+  actNumber?: string;
+  keyParties?: string[];
+  legalBasis?: string[];
 }
 
 interface DocumentListProps {
@@ -229,6 +237,18 @@ export function DocumentList({
                         >
                           {doc.categoryLabel}
                         </Badge>
+                        {doc.policeCaseSummary && (
+                          <span className="inline-flex items-center space-x-1 text-[10px] font-semibold bg-blue-600/15 text-blue-900 dark:text-blue-200 border border-blue-600/30 px-1.5 py-0.5 rounded">
+                            <ShieldCheck className="h-2.5 w-2.5 text-blue-600 dark:text-blue-400" />
+                            <span>Policía TDF</span>
+                          </span>
+                        )}
+                        {doc.captureImageUrl && (
+                          <span className="inline-flex items-center space-x-1 text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border/50">
+                            <ImageIcon className="h-2.5 w-2.5 text-primary/70" />
+                            <span>Facsímil</span>
+                          </span>
+                        )}
                         {doc.callNumber && (
                           <span className="text-[10px] font-mono bg-muted/80 text-muted-foreground px-1.5 py-0.5 rounded border border-border/50">
                             {doc.callNumber}

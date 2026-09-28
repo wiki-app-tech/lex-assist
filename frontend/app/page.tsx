@@ -625,10 +625,20 @@ export default function HomePage() {
           {selectedCategory === "boletin_drive" && driveViewMode === "panel" ? (
             <div className="flex-1 flex flex-col h-full overflow-hidden">
               <BoletinesThematicPanel
-                onSelectDocument={(doc) => {
+                onSelectDocument={(doc, targetSection?: string) => {
                   setSelectedDoc(doc);
                   setDriveViewMode("reader");
                   setMobileView("reader");
+                  if (targetSection) {
+                    setTimeout(() => {
+                      const el = document.getElementById(targetSection);
+                      if (el) {
+                        el.scrollIntoView({ behavior: "smooth", block: "start" });
+                        el.classList.add("ring-4", "ring-blue-500/60", "transition-all");
+                        setTimeout(() => el.classList.remove("ring-4", "ring-blue-500/60"), 2500);
+                      }
+                    }, 200);
+                  }
                 }}
                 selectedDocId={selectedDoc?.id}
               />

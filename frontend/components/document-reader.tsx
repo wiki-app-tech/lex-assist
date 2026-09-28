@@ -19,6 +19,14 @@ import {
   Globe,
   Landmark,
   HardDrive,
+  ShieldCheck,
+  ShieldAlert,
+  ScrollText,
+  Image as ImageIcon,
+  Maximize2,
+  ZoomIn,
+  Scale,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +37,69 @@ import { cn } from "@/lib/utils";
 import type { DocumentItem } from "@/components/document-list";
 import { getDriveEmbedUrl } from "@/lib/driveBoletines";
 
+const LEGAL_HIGHLIGHT_TERMS = [
+  "Sargento Primero Rubén Manuel Soto",
+  "Sargento Primero Rubén Manuel SOTO",
+  "Sargento Primero",
+  "Rubén Manuel Soto",
+  "Rubén Manuel SOTO",
+  "Suboficial Escribiente",
+  "Luis Alberto Tarifa",
+  "Luis Alberto TARIFA",
+  "Cabo 1°",
+  "Cabo Primero",
+  "Policía Provincial",
+  "Policía de la Provincia",
+  "Policía de Tierra del Fuego",
+  "Jefatura de Policía",
+  "Servicio Penitenciario Provincial",
+  "Servicio Penitenciario",
+  "Secretaría de Enlace con las Fuerzas de Seguridad",
+  "Fuerzas de Seguridad",
+  "Junta Permanente de Calificaciones",
+  "División Bienestar Policial Río Grande",
+  "División Bienestar Policial",
+  "Sumario Administrativo N° 060/2023-D.I.A.Z.N.",
+  "Sumario Administrativo",
+  "incapacidad física permanente",
+  "incapacidad permanente",
+  "Retiro Obligatorio",
+  "ascenso extraordinario",
+  "estado policial",
+  "Ley Provincial N° 735",
+  "Ley Provincial N° 263",
+  "Ley Provincial N° 73",
+  "Decreto N° 511",
+  "Decreto N° 1606",
+  "Decreto N° 601",
+  "Decreto N° 1435",
+  "Decreto N° 365",
+  "Decreto Provincial N° 2617/02",
+];
+
+function highlightLegalTerms(text: string) {
+  const sorted = [...LEGAL_HIGHLIGHT_TERMS].sort((a, b) => b.length - a.length);
+  const pattern = new RegExp(
+    `(${sorted.map((t) => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`,
+    "gi"
+  );
+  const parts = text.split(pattern);
+  return parts.map((part, i) => {
+    const isMatch = sorted.some((t) => t.toLowerCase() === part.toLowerCase());
+    if (isMatch) {
+      return (
+        <mark
+          key={i}
+          className="bg-blue-500/25 text-blue-950 dark:text-blue-100 font-bold px-1 py-0.5 rounded border border-blue-500/30"
+        >
+          {part}
+        </mark>
+      );
+    }
+    return part;
+  });
+}
+
 interface DocumentReaderProps {
   document: DocumentItem | null;
   onBackMobile?: () => void;
@@ -36,6 +107,8 @@ interface DocumentReaderProps {
 
 export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) {
   const [copied, setCopied] = React.useState(false);
+  const [copiedRedaction, setCopiedRedaction] = React.useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = React.useState(false);
   const [fontSize, setFontSize] = React.useState<"normal" | "large" | "xlarge">("normal");
   const [viewMode, setViewMode] = React.useState<"text" | "live_web" | "drive_pdf">("text");
 
@@ -186,6 +259,52 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
               <span className="hidden sm:inline">
                 {viewMode === "drive_pdf" ? "Ver Ficha IA" : "Visor PDF en Drive"}
               </span>
+            </Button>
+          )}
+
+          {/* Quick-Jump to Official Police Redaction */}
+          {document.exactRedaction && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  const el = window.document.getElementById("redaccion-oficial");
+                  if (el) {
+                    el.scrollIntoView({ behavior: "smooth", block: "start" });
+                    el.classList.add("ring-4", "ring-blue-500/60");
+                    setTimeout(() => el.classList.remove("ring-4", "ring-blue-500/60"), 2000);
+                  }
+                }
+              }}
+              className="h-8 text-xs space-x-1.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-xs"
+              title="Ir directamente a la redacción oficial del caso en el boletín"
+            >
+              <ScrollText className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Redacción Oficial</span>
+            </Button>
+          )}
+
+          {/* Quick-Jump to Facsimile Capture */}
+          {document.captureImageUrl && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  const el = window.document.getElementById("captura-oficial");
+                  if (el) {
+                    el.scrollIntoView({ behavior: "smooth", block: "start" });
+                  } else {
+                    setIsLightboxOpen(true);
+                  }
+                }
+              }}
+              className="h-8 text-xs space-x-1.5 border-blue-500/40 text-blue-800 dark:text-blue-300 hover:bg-blue-500/10"
+              title="Ver captura facsímil de la página oficial"
+            >
+              <ImageIcon className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Facsímil</span>
             </Button>
           )}
 
@@ -542,6 +661,302 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
             )}
           </div>
 
+          {/* CASO DESTACADO: SEGURIDAD & POLICÍA DE TIERRA DEL FUEGO */}
+          {(document.policeCaseSummary || document.exactRedaction) && (
+            <div className="rounded-xl border border-blue-500/40 bg-gradient-to-br from-blue-600/10 via-sky-600/5 to-indigo-600/10 p-5 space-y-4 shadow-sm">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-blue-500/20 pb-3">
+                <div className="flex items-center space-x-2.5">
+                  <div className="h-9 w-9 rounded-lg bg-blue-600/20 text-blue-700 dark:text-blue-300 border border-blue-500/40 flex items-center justify-center shrink-0">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2 flex-wrap">
+                      <span className="text-xs font-bold uppercase tracking-wider text-blue-900 dark:text-blue-200">
+                        Caso Oficial: Seguridad & Policía de Tierra del Fuego
+                      </span>
+                      {document.actNumber && (
+                        <Badge className="bg-blue-600 text-white font-mono text-[11px] px-2 py-0">
+                          {document.actNumber}
+                        </Badge>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {document.organism}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 shrink-0">
+                  {document.exactRedaction && (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        if (typeof window !== "undefined") {
+                          const el = window.document.getElementById("redaccion-oficial");
+                          if (el) {
+                            el.scrollIntoView({ behavior: "smooth", block: "start" });
+                            el.classList.add("ring-4", "ring-blue-500/60");
+                            setTimeout(() => el.classList.remove("ring-4", "ring-blue-500/60"), 2000);
+                          }
+                        }
+                      }}
+                      className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white space-x-1.5 shadow-sm font-semibold"
+                    >
+                      <ScrollText className="h-3.5 w-3.5" />
+                      <span>Ir a la Redacción Oficial ↓</span>
+                    </Button>
+                  )}
+                  {document.captureImageUrl && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (typeof window !== "undefined") {
+                          const el = window.document.getElementById("captura-oficial");
+                          if (el) {
+                            el.scrollIntoView({ behavior: "smooth", block: "start" });
+                          } else {
+                            setIsLightboxOpen(true);
+                          }
+                        }
+                      }}
+                      className="h-8 text-xs border-blue-500/40 text-blue-800 dark:text-blue-300 hover:bg-blue-500/10 space-x-1"
+                    >
+                      <ImageIcon className="h-3.5 w-3.5" />
+                      <span>Ver Captura / Facsímil ↓</span>
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Case Summary */}
+              {document.policeCaseSummary && (
+                <div className="space-y-2">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-blue-900 dark:text-blue-200 block">
+                    Resumen Analítico del Caso Redactado:
+                  </span>
+                  <p className="text-sm text-foreground/95 font-sans leading-relaxed bg-card/60 p-3.5 rounded-lg border border-blue-500/20">
+                    {document.policeCaseSummary}
+                  </p>
+                </div>
+              )}
+
+              {/* Parties and Legal Basis Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                {document.keyParties && document.keyParties.length > 0 && (
+                  <div className="rounded-lg bg-card/50 p-3 border border-border/70 space-y-1.5">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center space-x-1">
+                      <User className="h-3 w-3 text-blue-600" />
+                      <span>Partes & Agentes Intervinientes:</span>
+                    </span>
+                    <ul className="space-y-1 text-xs text-foreground font-mono">
+                      {document.keyParties.map((p, idx) => (
+                        <li key={idx} className="flex items-center space-x-1.5">
+                          <span className="text-blue-600 font-bold">•</span>
+                          <span>{p}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {document.legalBasis && document.legalBasis.length > 0 && (
+                  <div className="rounded-lg bg-card/50 p-3 border border-border/70 space-y-1.5">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center space-x-1">
+                      <Scale className="h-3 w-3 text-blue-600" />
+                      <span>Fundamentos & Artículos Legales:</span>
+                    </span>
+                    <ul className="space-y-1 text-xs text-foreground font-sans">
+                      {document.legalBasis.map((l, idx) => (
+                        <li key={idx} className="flex items-center space-x-1.5">
+                          <span className="text-blue-600 font-bold">•</span>
+                          <span>{l}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* SECCIÓN: REDACCIÓN OFICIAL DEL CASO (VERBATIM) */}
+          {document.exactRedaction && (
+            <div
+              id="redaccion-oficial"
+              className="rounded-xl border-2 border-blue-500/40 bg-card p-5 space-y-3.5 shadow-sm scroll-mt-20 transition-all"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/80 pb-3">
+                <div className="flex items-center space-x-2">
+                  <div className="h-8 w-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0">
+                    <ScrollText className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif text-base font-bold text-foreground">
+                      Redacción Oficial del Caso (Texto Exacto del Boletín)
+                    </h3>
+                    <span className="text-xs text-muted-foreground">
+                      Transcripción fiel del acto administrativo publicado en el Boletín Oficial
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Badge variant="outline" className="border-blue-500/40 text-blue-800 dark:text-blue-300 text-xs font-mono">
+                    Transcripción Verbatim
+                  </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(document.exactRedaction || "");
+                      setCopiedRedaction(true);
+                      setTimeout(() => setCopiedRedaction(false), 2000);
+                    }}
+                    className="h-8 text-xs space-x-1.5"
+                  >
+                    {copiedRedaction ? (
+                      <>
+                        <Check className="h-3.5 w-3.5 text-emerald-600" />
+                        <span>Copiado</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3.5 w-3.5" />
+                        <span>Copiar Redacción</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Exact Redaction Box with Keywords Highlighted */}
+              <div className="rounded-lg bg-muted/30 p-4 border border-border/60">
+                <div className="font-serif text-xs sm:text-sm leading-relaxed whitespace-pre-wrap text-foreground select-text font-normal space-y-2">
+                  {highlightLegalTerms(document.exactRedaction)}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1">
+                <span className="flex items-center space-x-1">
+                  <span className="h-2 w-2 rounded-full bg-blue-600 inline-block" />
+                  <span>Términos clave y partes legales resaltados para una lectura clara</span>
+                </span>
+                {document.captureImageUrl && (
+                  <button
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        const el = window.document.getElementById("captura-oficial");
+                        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                        else setIsLightboxOpen(true);
+                      }
+                    }}
+                    className="text-primary hover:underline font-medium inline-flex items-center space-x-1"
+                  >
+                    <span>Comparar con captura facsímil ↓</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* SECCIÓN: CAPTURA OFICIAL DE LA PÁGINA (FACSÍMIL) */}
+          <div id="captura-oficial" className="rounded-xl border border-border/80 bg-card p-5 space-y-3.5 shadow-sm scroll-mt-20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/80 pb-3">
+              <div className="flex items-center space-x-2">
+                <div className="h-8 w-8 rounded-lg bg-sky-600/15 text-sky-700 dark:text-sky-300 border border-sky-500/30 flex items-center justify-center shrink-0">
+                  <ImageIcon className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-base font-bold text-foreground">
+                    Captura Oficial de la Página (Facsímil del Boletín)
+                  </h3>
+                  <span className="text-xs text-muted-foreground">
+                    Evidencia gráfica y documental escaneada para corroborar la redacción original
+                  </span>
+                </div>
+              </div>
+
+              {document.captureImageUrl && (
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsLightboxOpen(true)}
+                    className="h-8 text-xs space-x-1.5"
+                  >
+                    <Maximize2 className="h-3.5 w-3.5" />
+                    <span>Maximizar Captura</span>
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    asChild
+                    className="h-8 text-xs space-x-1.5"
+                  >
+                    <a
+                      href={document.captureImageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      <span>Abrir Imagen</span>
+                    </a>
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {document.captureImageUrl ? (
+              <div className="space-y-3">
+                <div className="rounded-lg border border-border/80 overflow-hidden bg-white dark:bg-zinc-950 p-2 relative group flex items-center justify-center shadow-inner">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={document.captureImageUrl}
+                    alt={`Facsímil Oficial de la Página ${document.number}`}
+                    className="w-full h-auto object-contain max-h-[550px] rounded cursor-zoom-in transition-transform duration-200 group-hover:scale-[1.01]"
+                    onClick={() => setIsLightboxOpen(true)}
+                  />
+                  <div
+                    onClick={() => setIsLightboxOpen(true)}
+                    className="absolute bottom-4 right-4 bg-black/70 hover:bg-black/90 text-white px-3 py-1.5 rounded-lg text-xs flex items-center space-x-1.5 cursor-pointer backdrop-blur-sm transition-all"
+                  >
+                    <ZoomIn className="h-3.5 w-3.5" />
+                    <span>Click para ampliar</span>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-muted-foreground text-center">
+                  Facsímil oficial del documento original publicado en el Boletín Oficial de Tierra del Fuego ({document.number}).
+                  Permite constatar con certeza la redacción original frente a cualquier inconsistencia del procesamiento digital.
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-border/80 bg-muted/30 p-6 text-center space-y-3">
+                <FileText className="h-10 w-10 mx-auto text-muted-foreground/60" />
+                <div className="space-y-1 max-w-md mx-auto">
+                  <p className="text-sm font-semibold text-foreground">
+                    Página del Boletín disponible en Visor PDF
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Este boletín oficial cuenta con texto extraído digitalmente. Para inspeccionar la página facsímil escaneada, podés activar el Visor PDF de Google Drive.
+                  </p>
+                </div>
+                {isDrive && (
+                  <Button
+                    size="sm"
+                    onClick={() => setViewMode("drive_pdf")}
+                    className="h-8 text-xs bg-cyan-600 hover:bg-cyan-700 text-white space-x-1.5 shadow-sm"
+                  >
+                    <HardDrive className="h-3.5 w-3.5" />
+                    <span>Ver en Visor PDF de Drive</span>
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* AI SUMMARY BOX */}
           <Card className="border-primary/30 bg-primary/5 dark:bg-primary/10 shadow-sm relative overflow-hidden">
             <div className="absolute top-0 left-0 bottom-0 w-1.5 bg-primary" />
@@ -637,6 +1052,69 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
           </div>
         </div>
       </ScrollArea>
+      )}
+
+      {/* Lightbox Modal for High-Resolution Facsimile Image */}
+      {isLightboxOpen && document.captureImageUrl && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in">
+          <div className="bg-background rounded-xl border border-blue-500/40 shadow-2xl max-w-5xl w-full h-[90vh] flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-border flex items-center justify-between gap-3 bg-muted/40">
+              <div className="space-y-0.5">
+                <div className="flex items-center space-x-2">
+                  <Badge variant="drive" className="text-xs font-mono">
+                    {document.number}
+                  </Badge>
+                  {document.actNumber && (
+                    <Badge variant="outline" className="border-blue-500/40 text-blue-800 dark:text-blue-300 text-xs">
+                      {document.actNumber}
+                    </Badge>
+                  )}
+                  <span className="text-xs text-muted-foreground">
+                    Captura Oficial de Alta Resolución
+                  </span>
+                </div>
+                <h3 className="font-serif font-bold text-base text-foreground line-clamp-1">
+                  {document.title}
+                </h3>
+              </div>
+
+              <div className="flex items-center space-x-2 shrink-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                  className="h-8 text-xs space-x-1"
+                >
+                  <a
+                    href={document.captureImageUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    <span>Abrir en pestaña</span>
+                  </a>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                  onClick={() => setIsLightboxOpen(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-zinc-900/90">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={document.captureImageUrl}
+                alt={`Facsímil Oficial ${document.number}`}
+                className="max-w-full max-h-full object-contain rounded shadow-2xl"
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

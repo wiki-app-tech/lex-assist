@@ -49,10 +49,13 @@ import {
   POLICIA_SECURITY_CASES,
   getDriveEmbedUrl,
 } from "@/lib/driveBoletines";
+import type { BoletinFilterState } from "@/components/sidebar";
 
 interface BoletinesThematicPanelProps {
   onSelectDocument: (doc: DocumentItem, targetSection?: string) => void;
   selectedDocId?: string | null;
+  filter?: BoletinFilterState;
+  onFilterChange?: React.Dispatch<React.SetStateAction<BoletinFilterState>>;
 }
 
 const TOPIC_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -73,12 +76,24 @@ const ITEMS_PER_PAGE = 24;
 export function BoletinesThematicPanel({
   onSelectDocument,
   selectedDocId,
+  filter,
+  onFilterChange,
 }: BoletinesThematicPanelProps) {
-  // Filter States
-  const [selectedYear, setSelectedYear] = React.useState<number | "all">("all");
-  const [selectedMonth, setSelectedMonth] = React.useState<number | "all">("all");
-  const [selectedTopic, setSelectedTopic] = React.useState<string | "all">("all");
-  const [searchQuery, setSearchQuery] = React.useState("");
+  // Filter States: either controlled via props or local fallback
+  const [internalFilter, setInternalFilter] = React.useState<BoletinFilterState>({
+    year: "all",
+    month: "all",
+    topic: "all",
+    search: "",
+  });
+
+  const activeFilter = filter ?? internalFilter;
+  const updateFilter = onFilterChange ?? setInternalFilter;
+
+  const selectedYear = activeFilter.year;
+  const selectedMonth = activeFilter.month;
+  const selectedTopic = activeFilter.topic;
+  const searchQuery = activeFilter.search;
   const [sortOrder, setSortOrder] = React.useState<"date_desc" | "date_asc" | "edition_desc">("date_desc");
   const [currentPage, setCurrentPage] = React.useState(1);
 
@@ -218,10 +233,12 @@ export function BoletinesThematicPanel({
     searchQuery.trim() !== "";
 
   const handleResetFilters = () => {
-    setSelectedYear("all");
-    setSelectedMonth("all");
-    setSelectedTopic("all");
-    setSearchQuery("");
+    updateFilter({
+      year: "all",
+      month: "all",
+      topic: "all",
+      search: "",
+    });
     setSortOrder("date_desc");
   };
 
@@ -240,36 +257,108 @@ export function BoletinesThematicPanel({
 
   return (
     <div className="flex flex-col h-full bg-background overflow-y-auto">
-      {/* Top Banner / Hero Header */}
-      <div className="border-b border-border/80 bg-gradient-to-r from-sky-500/10 via-background to-cyan-500/10 p-4 sm:p-6 lg:p-8 space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="flex items-center space-x-2.5">
-              <div className="h-8 w-8 rounded-lg bg-cyan-600/15 border border-cyan-500/30 flex items-center justify-center text-cyan-700 dark:text-cyan-300">
-                <HardDrive className="h-4 w-4" />
-              </div>
-              <Badge variant="drive" className="text-xs uppercase font-mono tracking-wider">
-                Google Drive • Repositorio Provincial
-              </Badge>
-              <Badge variant="outline" className="text-xs border-emerald-500/30 text-emerald-700 dark:text-emerald-300">
-                653 Boletines Indexados
-              </Badge>
+      {/* ULTRA-COMPACT STICKY HEADER (PC & MOBILE ADAPTED) */}
+      <div className="sticky top-0 z-20 border-b border-border/80 bg-background/95 backdrop-blur-md px-3 sm:px-6 py-2.5 space-y-2">
+        {/* Row 1: Title, active filter badge, search input, sort, drive link, reset */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+          {/* Title & Active Filter Tag */}
+          <div className="flex items-center space-x-2 shrink-0">
+            <div className="h-7 w-7 rounded-md bg-cyan-600/15 border border-cyan-500/30 flex items-center justify-center text-cyan-700 dark:text-cyan-300 shrink-0">
+              <HardDrive className="h-3.5 w-3.5" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold text-foreground tracking-tight">
-              Boletines Oficiales de Tierra del Fuego
-            </h1>
-            <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
-              Panel de búsqueda temática con acceso directo a cada uno de los boletines oficiales en PDF publicados por el Gobierno Provincial en los años <strong>2024, 2025 y 2026</strong>.
-            </p>
+            <div className="flex items-center space-x-1.5 flex-wrap">
+              <span className="font-serif font-bold text-sm sm:text-base text-foreground tracking-tight">
+                Boletines Oficiales
+              </span>
+
+              {/* Dynamic active filter pill */}
+              {selectedTopic === "Seguridad & Policía de Tierra del Fuego" ? (
+                <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-1.5 py-0 flex items-center space-x-1">
+                  <ShieldCheck className="h-3 w-3" />
+                  <span>Seguridad & Policía ({filteredBoletines.length})</span>
+                  <button
+                    onClick={() => updateFilter((prev) => ({ ...prev, topic: "all" }))}
+                    className="ml-1 hover:text-red-200"
+                    title="Quitar filtro de policía"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              ) : selectedYear !== "all" ? (
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 flex items-center space-x-1 border">
+                  <Calendar className="h-3 w-3 text-primary" />
+                  <span>Año {selectedYear} ({filteredBoletines.length})</span>
+                  <button
+                    onClick={() => updateFilter((prev) => ({ ...prev, year: "all", month: "all" }))}
+                    className="ml-1 hover:text-red-500"
+                    title="Quitar filtro de año"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              ) : selectedTopic !== "all" ? (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex items-center space-x-1 border-primary/40 text-primary">
+                  <span>
+                    {THEMATIC_AREAS.find((t) => t.id === selectedTopic)?.shortLabel || selectedTopic} ({filteredBoletines.length})
+                  </span>
+                  <button
+                    onClick={() => updateFilter((prev) => ({ ...prev, topic: "all" }))}
+                    className="ml-1 hover:text-red-500"
+                    title="Quitar filtro de tema"
+                  >
+                    ×
+                  </button>
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-border/80 text-muted-foreground font-mono">
+                  653 edic.
+                </Badge>
+              )}
+            </div>
           </div>
 
-          {/* Quick Access to Drive Folder */}
-          <div className="flex items-center space-x-2 shrink-0">
+          {/* Search Input, Sort Selector & Quick Drive / Reset */}
+          <div className="flex items-center space-x-2 flex-1 sm:max-w-xl justify-end">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por N° (ej: 6173), decreto, sumario..."
+                value={searchQuery}
+                onChange={(e) => updateFilter((prev) => ({ ...prev, search: e.target.value }))}
+                className="pl-8 pr-7 h-8 text-xs bg-card/70 focus:bg-background"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => updateFilter((prev) => ({ ...prev, search: "" }))}
+                  className="absolute right-2 top-2 text-muted-foreground hover:text-foreground text-xs"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Sort Toggle */}
+            <div className="flex items-center space-x-1 border border-border/80 rounded-md px-2 h-8 bg-card/50 text-[11px] shrink-0">
+              <ArrowUpDown className="h-3 w-3 text-muted-foreground" />
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as any)}
+                aria-label="Criterio de ordenamiento"
+                className="bg-transparent text-[11px] text-foreground focus:outline-none cursor-pointer max-w-[100px] sm:max-w-none"
+              >
+                <option value="date_desc">Más recientes (2026 → 2024)</option>
+                <option value="date_asc">Más antiguos (2024 → 2026)</option>
+                <option value="edition_desc">N° Edición (Mayor a menor)</option>
+              </select>
+            </div>
+
+            {/* Quick Drive Button */}
             <Button
-              variant="outline"
-              size="sm"
+              variant="ghost"
+              size="icon"
               asChild
-              className="h-9 text-xs space-x-1.5 border-cyan-500/30 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/10 shadow-sm"
+              className="h-8 w-8 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/10 shrink-0"
+              title="Abrir carpeta oficial en Google Drive"
             >
               <a
                 href="https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6"
@@ -277,263 +366,188 @@ export function BoletinesThematicPanel({
                 rel="noopener noreferrer"
               >
                 <HardDrive className="h-3.5 w-3.5" />
-                <span>Carpeta Raíz en Google Drive</span>
-                <ExternalLink className="h-3 w-3 ml-0.5" />
               </a>
             </Button>
-          </div>
-        </div>
 
-        {/* Stats Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-          <div className="p-3 rounded-lg border border-border/70 bg-card/60 space-y-0.5">
-            <span className="text-[11px] font-mono uppercase text-muted-foreground">Año 2026</span>
-            <div className="text-lg font-bold font-serif text-cyan-700 dark:text-cyan-400">
-              {yearCounts[2026]} ediciones
-            </div>
-            <span className="text-[10px] text-muted-foreground">Enero a Septiembre 2026</span>
-          </div>
-
-          <div className="p-3 rounded-lg border border-border/70 bg-card/60 space-y-0.5">
-            <span className="text-[11px] font-mono uppercase text-muted-foreground">Año 2025</span>
-            <div className="text-lg font-bold font-serif text-emerald-700 dark:text-emerald-400">
-              {yearCounts[2025]} ediciones
-            </div>
-            <span className="text-[10px] text-muted-foreground">12 meses completos</span>
-          </div>
-
-          <div className="p-3 rounded-lg border border-border/70 bg-card/60 space-y-0.5">
-            <span className="text-[11px] font-mono uppercase text-muted-foreground">Año 2024</span>
-            <div className="text-lg font-bold font-serif text-amber-700 dark:text-amber-400">
-              {yearCounts[2024]} ediciones
-            </div>
-            <span className="text-[10px] text-muted-foreground">Marzo a Diciembre 2024</span>
-          </div>
-
-          <div className="p-3 rounded-lg border border-border/70 bg-card/60 space-y-0.5">
-            <span className="text-[11px] font-mono uppercase text-muted-foreground">Ejes Temáticos</span>
-            <div className="text-lg font-bold font-serif text-primary">
-              {THEMATIC_AREAS.length} Áreas
-            </div>
-            <span className="text-[10px] text-muted-foreground">Clasificación Gubernamental</span>
-          </div>
-        </div>
-      </div>
-
-      {/* FILTERS TOOLBAR */}
-      <div className="p-4 sm:p-6 border-b border-border/80 bg-background/80 backdrop-blur-md sticky top-0 z-20 space-y-4">
-        {/* Row 1: Search Input & Order selector */}
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
-          <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por N° de boletín (ej: 6173, 5988), decreto, ministerio, palabra clave..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9.5 pr-8 h-9 text-xs sm:text-sm bg-card/70 focus:bg-background"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-center space-x-2 shrink-0">
-            {/* Sort Toggle */}
-            <div className="flex items-center space-x-1.5 border border-border/80 rounded-md px-2.5 h-9 bg-card/50 text-xs">
-              <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as any)}
-                aria-label="Criterio de ordenamiento"
-                className="bg-transparent text-xs text-foreground focus:outline-none cursor-pointer"
-              >
-                <option value="date_desc">Más recientes primero (2026 → 2024)</option>
-                <option value="date_asc">Más antiguos primero (2024 → 2026)</option>
-                <option value="edition_desc">N° de Edición (Mayor a menor)</option>
-              </select>
-            </div>
-
+            {/* Reset Button */}
             {hasActiveFilters && (
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleResetFilters}
-                className="h-9 text-xs text-muted-foreground hover:text-foreground space-x-1"
+                className="h-8 px-2 text-[11px] text-muted-foreground hover:text-foreground space-x-1 shrink-0"
+                title="Restablecer todos los filtros"
               >
-                <RotateCcw className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Restablecer</span>
+                <RotateCcw className="h-3 w-3" />
+                <span className="hidden md:inline">Restablecer</span>
               </Button>
             )}
           </div>
         </div>
 
-        {/* Row 2: Year Selector (Años 2024, 2025, 2026) */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0 flex items-center space-x-1">
-            <Calendar className="h-3.5 w-3.5 text-primary" />
-            <span>Año:</span>
-          </span>
-          <div className="flex flex-wrap gap-1.5">
-            <Button
-              variant={selectedYear === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSelectedYear("all")}
-              className="h-7 text-xs px-2.5"
-            >
-              Todos los años ({DRIVE_BOLETINES_DOCUMENTS.length})
-            </Button>
-            {[2026, 2025, 2024].map((year) => (
-              <Button
+        {/* Row 2: Horizontal Quick Filter Chips Strip (Touch-friendly and Swipeable for Mobile) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
+          {/* All Chip */}
+          <button
+            onClick={() => updateFilter((prev) => ({ ...prev, year: "all", topic: "all" }))}
+            className={cn(
+              "shrink-0 h-6 px-2.5 rounded-full text-[11px] font-medium transition-all flex items-center space-x-1 border",
+              selectedYear === "all" && selectedTopic === "all"
+                ? "bg-primary text-primary-foreground border-primary shadow-xs font-semibold"
+                : "bg-muted/50 border-border/80 text-muted-foreground hover:text-foreground hover:bg-muted"
+            )}
+          >
+            <span>Todos</span>
+            <span className="font-mono text-[9px] opacity-80">653</span>
+          </button>
+
+          {/* Seguridad & Policía Chip */}
+          <button
+            onClick={() =>
+              updateFilter((prev) => ({
+                ...prev,
+                topic:
+                  selectedTopic === "Seguridad & Policía de Tierra del Fuego"
+                    ? "all"
+                    : "Seguridad & Policía de Tierra del Fuego",
+              }))
+            }
+            className={cn(
+              "shrink-0 h-6 px-2.5 rounded-full text-[11px] font-medium transition-all flex items-center space-x-1.5 border",
+              selectedTopic === "Seguridad & Policía de Tierra del Fuego"
+                ? "bg-blue-600 text-white border-blue-600 shadow-xs font-semibold"
+                : "bg-blue-500/10 text-blue-800 dark:text-blue-300 border-blue-500/30 hover:bg-blue-500/20"
+            )}
+          >
+            <ShieldCheck className="h-3 w-3" />
+            <span>Seguridad & Policía</span>
+            <span className="font-mono text-[9px] bg-blue-600/30 text-current px-1 rounded-full">
+              {topicCounts["Seguridad & Policía de Tierra del Fuego"] || 6}
+            </span>
+          </button>
+
+          {/* Year Chips */}
+          {[2026, 2025, 2024].map((year) => {
+            const isYearSelected = selectedYear === year && selectedTopic !== "Seguridad & Policía de Tierra del Fuego";
+            return (
+              <button
                 key={year}
-                variant={selectedYear === year ? "default" : "outline"}
-                size="sm"
-                onClick={() => setSelectedYear(year)}
-                className="h-7 text-xs px-2.5 space-x-1.5"
+                onClick={() =>
+                  updateFilter((prev) => ({
+                    ...prev,
+                    year: selectedYear === year ? "all" : year,
+                    month: "all",
+                  }))
+                }
+                className={cn(
+                  "shrink-0 h-6 px-2 rounded-full text-[11px] font-medium transition-all flex items-center space-x-1 border",
+                  isYearSelected
+                    ? "bg-primary text-primary-foreground border-primary shadow-xs font-semibold"
+                    : "bg-card/70 border-border/80 text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
               >
                 <span>{year}</span>
-                <span
-                  className={cn(
-                    "text-[10px] px-1.5 py-0.2 rounded-full font-mono",
-                    selectedYear === year ? "bg-primary-foreground/20 text-primary-foreground" : "bg-muted text-muted-foreground"
-                  )}
-                >
-                  {yearCounts[year]}
-                </span>
-              </Button>
-            ))}
-          </div>
+                <span className="font-mono text-[9px] opacity-80">{yearCounts[year]}</span>
+              </button>
+            );
+          })}
+
+          <div className="h-3.5 w-px bg-border shrink-0 mx-0.5" />
+
+          {/* Thematic Area Chips */}
+          {THEMATIC_AREAS.filter((t) => t.id !== "Seguridad & Policía de Tierra del Fuego").map((topic) => {
+            const Icon = TOPIC_ICONS[topic.id] || FileText;
+            const isSelected = selectedTopic === topic.id;
+            const count = topicCounts[topic.id] || 0;
+
+            return (
+              <button
+                key={topic.id}
+                onClick={() =>
+                  updateFilter((prev) => ({
+                    ...prev,
+                    topic: isSelected ? "all" : topic.id,
+                  }))
+                }
+                className={cn(
+                  "shrink-0 h-6 px-2 rounded-full text-[11px] font-medium transition-all flex items-center space-x-1 border",
+                  isSelected
+                    ? cn(topic.bgClass, "ring-1 ring-primary font-semibold shadow-xs")
+                    : "bg-card/70 border-border/80 text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+              >
+                <Icon className="h-3 w-3 shrink-0" />
+                <span>{topic.shortLabel}</span>
+                {count > 0 && <span className="font-mono text-[9px] opacity-75">{count}</span>}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Row 3: Month Selector (Enero a Diciembre) */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0 flex items-center space-x-1">
-            <SlidersHorizontal className="h-3.5 w-3.5 text-primary" />
-            <span>Mes:</span>
-          </span>
-          <div className="flex flex-wrap gap-1">
-            <Button
-              variant={selectedMonth === "all" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setSelectedMonth("all")}
+        {/* Row 3: Conditional Inline Sub-bars */}
+        {/* Month selector if year is selected */}
+        {selectedYear !== "all" && (
+          <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pt-1 text-[11px] border-t border-border/50">
+            <span className="text-[10px] uppercase font-semibold text-muted-foreground mr-1 shrink-0 flex items-center space-x-1">
+              <SlidersHorizontal className="h-3 w-3" />
+              <span>Mes:</span>
+            </span>
+            <button
+              onClick={() => updateFilter((prev) => ({ ...prev, month: "all" }))}
               className={cn(
-                "h-6 text-[11px] px-2",
-                selectedMonth === "all" ? "font-semibold bg-secondary text-secondary-foreground" : "text-muted-foreground"
+                "shrink-0 h-5 px-1.5 rounded text-[10px] font-medium transition-colors",
+                selectedMonth === "all" ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
               )}
             >
-              Todos los meses
-            </Button>
+              Todos
+            </button>
             {DRIVE_CATALOG.months.map((m) => {
               const count = monthCounts[m.id] || 0;
               const isSelected = selectedMonth === m.id;
+              if (count === 0) return null;
               return (
                 <button
                   key={m.id}
-                  disabled={count === 0}
-                  onClick={() => setSelectedMonth(isSelected ? "all" : m.id)}
+                  onClick={() => updateFilter((prev) => ({ ...prev, month: isSelected ? "all" : m.id }))}
                   className={cn(
-                    "h-6 text-[11px] px-2 rounded-md transition-colors flex items-center space-x-1 border",
+                    "shrink-0 h-5 px-1.5 rounded text-[10px] font-medium transition-colors flex items-center space-x-1",
                     isSelected
-                      ? "bg-primary text-primary-foreground border-primary font-semibold shadow-xs"
-                      : count > 0
-                      ? "bg-card/70 border-border/80 text-foreground hover:bg-muted"
-                      : "bg-muted/30 border-transparent text-muted-foreground/40 cursor-not-allowed"
+                      ? "bg-primary text-primary-foreground font-semibold"
+                      : "text-foreground bg-muted/60 hover:bg-muted"
                   )}
                 >
-                  <span>{m.name}</span>
-                  {count > 0 && (
-                    <span
-                      className={cn(
-                        "text-[9px] px-1 rounded-full font-mono",
-                        isSelected ? "bg-primary-foreground/20" : "text-muted-foreground"
-                      )}
-                    >
-                      {count}
-                    </span>
-                  )}
+                  <span>{m.name.slice(0, 3)}</span>
+                  <span className="text-[9px] opacity-70">({count})</span>
                 </button>
               );
             })}
           </div>
-        </div>
+        )}
 
-        {/* SPOTLIGHT FILTER TAG: Seguridad & Policía de Tierra del Fuego */}
-        <div className="rounded-xl border border-blue-500/35 bg-gradient-to-r from-blue-600/10 via-sky-600/5 to-indigo-600/10 p-3 sm:p-4 space-y-2.5 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <div className="flex items-center space-x-2.5">
-              <div className="h-8 w-8 rounded-lg bg-blue-600/20 text-blue-700 dark:text-blue-300 border border-blue-500/40 flex items-center justify-center shrink-0">
-                <ShieldCheck className="h-4 w-4" />
-              </div>
-              <div className="space-y-0.5">
-                <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                  <span className="text-xs font-bold uppercase tracking-wider text-blue-900 dark:text-blue-200">
-                    Etiqueta de Búsqueda: Seguridad & Policía de Tierra del Fuego
-                  </span>
-                  <Badge className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-1.5 py-0 font-mono">
-                    {topicCounts["Seguridad & Policía de Tierra del Fuego"] || 6} ediciones indexadas
-                  </Badge>
-                </div>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Actos administrativos, sumarios policiales, pases a retiro por incapacidad, ascensos extraordinarios, equipamiento y redacción oficial de la Policía Provincial y fuerzas de seguridad de TDF.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2 shrink-0">
-              <Button
-                variant={selectedTopic === "Seguridad & Policía de Tierra del Fuego" ? "default" : "outline"}
-                size="sm"
-                onClick={() =>
-                  setSelectedTopic(
-                    selectedTopic === "Seguridad & Policía de Tierra del Fuego"
-                      ? "all"
-                      : "Seguridad & Policía de Tierra del Fuego"
-                  )
-                }
-                className={cn(
-                  "h-8 text-xs space-x-1.5 transition-all shadow-xs",
-                  selectedTopic === "Seguridad & Policía de Tierra del Fuego"
-                    ? "bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm"
-                    : "border-blue-500/40 text-blue-800 dark:text-blue-300 hover:bg-blue-500/10"
-                )}
-              >
-                <ShieldCheck className="h-3.5 w-3.5" />
-                <span>
-                  {selectedTopic === "Seguridad & Policía de Tierra del Fuego"
-                    ? "Filtro Policía Activo"
-                    : "Filtrar por Policía & Seguridad"}
-                </span>
-              </Button>
-            </div>
-          </div>
-
-          {/* Quick chips to jump directly to specific police cases and facsimiles */}
-          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-blue-500/20 text-[11px]">
-            <span className="text-muted-foreground font-medium text-[10px] uppercase tracking-wider mr-1 flex items-center space-x-1">
+        {/* Police Cases Quick Jumps if Police filter is active */}
+        {selectedTopic === "Seguridad & Policía de Tierra del Fuego" && (
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-1 text-[11px] border-t border-blue-500/20">
+            <span className="text-[10px] uppercase font-semibold text-blue-800 dark:text-blue-300 mr-1 shrink-0 flex items-center space-x-1">
               <Sparkles className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-              <span>Casos con resumen & facsímil oficial:</span>
+              <span>Casos con Facsímil:</span>
             </span>
             {POLICIA_SECURITY_CASES.map((caso) => {
-              const isActive =
-                searchQuery === caso.edition_number || searchQuery === caso.act_number;
+              const isActive = searchQuery === caso.edition_number || searchQuery === caso.act_number;
               return (
                 <button
                   key={caso.id}
-                  onClick={() => {
-                    setSelectedTopic("Seguridad & Policía de Tierra del Fuego");
-                    setSearchQuery(caso.edition_number);
-                  }}
+                  onClick={() =>
+                    updateFilter((prev) => ({
+                      ...prev,
+                      search: isActive ? "" : caso.edition_number,
+                    }))
+                  }
                   className={cn(
-                    "inline-flex items-center space-x-1 px-2.5 py-1 rounded-full border text-[11px] font-mono transition-all",
+                    "shrink-0 inline-flex items-center space-x-1 px-2 py-0.5 rounded-full border text-[10px] font-mono transition-all",
                     isActive
-                      ? "bg-blue-600 text-white border-blue-600 font-bold shadow-xs scale-105"
-                      : "bg-card/90 text-blue-900 dark:text-blue-200 border-blue-500/30 hover:bg-blue-500/15"
+                      ? "bg-blue-600 text-white border-blue-600 font-bold shadow-xs scale-102"
+                      : "bg-card text-blue-900 dark:text-blue-200 border-blue-500/30 hover:bg-blue-500/15"
                   )}
-                  title={`${caso.title} • ${caso.organism}`}
                 >
                   <ShieldCheck className="h-2.5 w-2.5 text-blue-600 dark:text-blue-400" />
                   <span>{caso.act_number} (B.O. {caso.edition_number})</span>
@@ -541,72 +555,7 @@ export function BoletinesThematicPanel({
               );
             })}
           </div>
-        </div>
-
-        {/* Row 4: Thematic Topics Selector */}
-        <div className="space-y-1.5 pt-1">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold text-muted-foreground uppercase tracking-wider flex items-center space-x-1">
-              <Layers className="h-3.5 w-3.5 text-primary" />
-              <span>Filtrar por Tema / Eje Gubernamental:</span>
-            </span>
-            {selectedTopic !== "all" && (
-              <button
-                onClick={() => setSelectedTopic("all")}
-                className="text-primary hover:underline text-xs"
-              >
-                Ver todos los temas
-              </button>
-            )}
-          </div>
-
-          <div className="flex flex-wrap gap-1.5">
-            <button
-              onClick={() => setSelectedTopic("all")}
-              className={cn(
-                "inline-flex items-center space-x-1.5 text-xs px-2.5 py-1 rounded-full border transition-all",
-                selectedTopic === "all"
-                  ? "bg-primary text-primary-foreground border-primary font-medium shadow-xs"
-                  : "bg-card/80 border-border text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-            >
-              <span>Todos los temas</span>
-              <span className="text-[10px] font-mono opacity-80">
-                ({DRIVE_BOLETINES_DOCUMENTS.length})
-              </span>
-            </button>
-
-            {THEMATIC_AREAS.map((topic) => {
-              const Icon = TOPIC_ICONS[topic.id] || FileText;
-              const isSelected = selectedTopic === topic.id;
-              const count = topicCounts[topic.id] || 0;
-
-              return (
-                <button
-                  key={topic.id}
-                  onClick={() => setSelectedTopic(isSelected ? "all" : topic.id)}
-                  className={cn(
-                    "inline-flex items-center space-x-1.5 text-xs px-2.5 py-1 rounded-full border transition-all",
-                    isSelected
-                      ? cn(topic.bgClass, "ring-2 ring-primary/40 font-semibold shadow-xs")
-                      : "bg-card/70 border-border/80 text-muted-foreground hover:text-foreground hover:bg-muted"
-                  )}
-                >
-                  <Icon className="h-3 w-3 shrink-0" />
-                  <span>{topic.shortLabel}</span>
-                  <span
-                    className={cn(
-                      "text-[10px] font-mono px-1 rounded-full",
-                      isSelected ? "bg-black/10 dark:bg-white/10" : "text-muted-foreground"
-                    )}
-                  >
-                    {count}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        )}
       </div>
 
       {/* RESULTS LIST & CARDS */}
@@ -725,7 +674,7 @@ export function BoletinesThematicPanel({
                           return (
                             <button
                               key={t}
-                              onClick={() => setSelectedTopic(t)}
+                              onClick={() => updateFilter((prev) => ({ ...prev, topic: t }))}
                               title={`Filtrar por ${t}`}
                               className={cn(
                                 "inline-flex items-center space-x-1 text-[10px] px-2 py-0.5 rounded-full border transition-transform hover:scale-105",

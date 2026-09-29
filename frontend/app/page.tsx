@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Sidebar, type CategoryKey } from "@/components/sidebar";
+import { Sidebar, type CategoryKey, type BoletinFilterState } from "@/components/sidebar";
 import { DocumentList, type DocumentItem } from "@/components/document-list";
 import { DocumentReader } from "@/components/document-reader";
 import { MobileHeader } from "@/components/mobile-header";
@@ -528,6 +528,18 @@ export default function HomePage() {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = React.useState(false);
   const [mobileView, setMobileView] = React.useState<"list" | "reader">("list");
   const [driveViewMode, setDriveViewMode] = React.useState<"panel" | "reader">("panel");
+  const [boletinFilter, setBoletinFilter] = React.useState<BoletinFilterState>({
+    year: "all",
+    month: "all",
+    topic: "all",
+    search: "",
+  });
+
+  const handleSelectBoletinFilter = (filter: BoletinFilterState) => {
+    setBoletinFilter(filter);
+    setSelectedCategory("boletin_drive");
+    setDriveViewMode("panel");
+  };
 
   // Dynamic counts for each category
   const documentCounts = React.useMemo(() => {
@@ -610,6 +622,8 @@ export default function HomePage() {
           isOpenMobile={isMobileSidebarOpen}
           onCloseMobile={() => setIsMobileSidebarOpen(false)}
           documentCounts={documentCounts}
+          boletinFilter={boletinFilter}
+          onSelectBoletinFilter={handleSelectBoletinFilter}
         />
 
         {/* Desktop Top Right Bar with Theme Toggle */}
@@ -625,6 +639,8 @@ export default function HomePage() {
           {selectedCategory === "boletin_drive" && driveViewMode === "panel" ? (
             <div className="flex-1 flex flex-col h-full overflow-hidden">
               <BoletinesThematicPanel
+                filter={boletinFilter}
+                onFilterChange={setBoletinFilter}
                 onSelectDocument={(doc, targetSection?: string) => {
                   setSelectedDoc(doc);
                   setDriveViewMode("reader");

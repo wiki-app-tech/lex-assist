@@ -20,6 +20,11 @@ import {
   Landmark,
   ScrollText,
   ExternalLink,
+  Calendar,
+  ShieldCheck,
+  ChevronDown,
+  ChevronRight,
+  Tag,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,12 +45,21 @@ export type CategoryKey =
   | "biblioteca_revistas"
   | "biblioteca_digital";
 
+export interface BoletinFilterState {
+  year: number | "all";
+  month: number | "all";
+  topic: string | "all";
+  search: string;
+}
+
 interface SidebarProps {
   selectedCategory: CategoryKey;
   onSelectCategory: (category: CategoryKey) => void;
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
   documentCounts?: Record<CategoryKey, number>;
+  boletinFilter?: BoletinFilterState;
+  onSelectBoletinFilter?: (filter: BoletinFilterState) => void;
 }
 
 export function Sidebar({
@@ -67,7 +81,17 @@ export function Sidebar({
     biblioteca_revistas: 2,
     biblioteca_digital: 2,
   },
+  boletinFilter = {
+    year: "all",
+    month: "all",
+    topic: "all",
+    search: "",
+  },
+  onSelectBoletinFilter,
 }: SidebarProps) {
+  const [isBoletinMenuOpen, setIsBoletinMenuOpen] = React.useState(true);
+  const [isThematicSubMenuOpen, setIsThematicSubMenuOpen] = React.useState(false);
+
   const normativaCategories: {
     id: CategoryKey;
     label: string;
@@ -335,57 +359,319 @@ export function Sidebar({
 
               return (
                 <div key={cat.id} className="space-y-1">
-                  <button
-                    onClick={() => {
-                      onSelectCategory(cat.id);
-                      if (onCloseMobile) onCloseMobile();
-                    }}
-                    className={cn(
-                      "w-full flex items-center justify-between px-3 py-1.5 rounded-md text-sm font-medium transition-all group",
-                      isSelected
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                    )}
-                  >
-                    <div className="flex items-center space-x-2.5">
-                      <Icon
-                        className={cn(
-                          "h-4 w-4 transition-colors",
-                          isSelected ? "text-primary-foreground" : cat.color
-                        )}
-                      />
-                      <span className="text-xs">{cat.label}</span>
-                    </div>
-
-                    <span
+                  {/* Render category button */}
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => {
+                        onSelectCategory(cat.id);
+                        if (cat.id === "boletin_drive") {
+                          setIsBoletinMenuOpen(true);
+                        }
+                        if (onCloseMobile) onCloseMobile();
+                      }}
                       className={cn(
-                        "text-[11px] px-1.5 py-0.5 rounded-full font-mono transition-colors",
+                        "flex-1 flex items-center justify-between px-3 py-1.5 rounded-md text-sm font-medium transition-all group",
                         isSelected
-                          ? "bg-white/20 text-white"
-                          : "bg-muted text-muted-foreground group-hover:bg-muted-foreground/15"
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                       )}
                     >
-                      {documentCounts[cat.id] ?? 0}
-                    </span>
-                  </button>
+                      <div className="flex items-center space-x-2.5">
+                        <Icon
+                          className={cn(
+                            "h-4 w-4 transition-colors",
+                            isSelected ? "text-primary-foreground" : cat.color
+                          )}
+                        />
+                        <span className="text-xs">{cat.label}</span>
+                      </div>
 
-                  {/* Acceso directo a Google Drive debajo de boletin_drive */}
-                  {cat.id === "boletin_drive" && (
-                    <div className="px-1 pt-0.5">
-                      <a
-                        href="https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group/link flex items-center justify-between w-full px-2.5 py-1.5 rounded-md border border-cyan-500/25 bg-cyan-500/5 hover:bg-cyan-500/10 hover:border-cyan-500/40 transition-all text-xs"
+                      <span
+                        className={cn(
+                          "text-[11px] px-1.5 py-0.5 rounded-full font-mono transition-colors",
+                          isSelected
+                            ? "bg-white/20 text-white"
+                            : "bg-muted text-muted-foreground group-hover:bg-muted-foreground/15"
+                        )}
                       >
-                        <span className="flex items-center space-x-1.5 text-[11px] text-cyan-700 dark:text-cyan-300 font-medium truncate">
-                          <HardDrive className="h-3 w-3 shrink-0" />
-                          <span className="truncate">Google Drive TDF</span>
+                        {documentCounts[cat.id] ?? 0}
+                      </span>
+                    </button>
+
+                    {/* Toggle button for sub-menu if boletin_drive */}
+                    {cat.id === "boletin_drive" && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsBoletinMenuOpen(!isBoletinMenuOpen);
+                        }}
+                        className="ml-1 p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+                        title={isBoletinMenuOpen ? "Contraer sub-menú" : "Expandir sub-menú"}
+                        aria-label="Toggle sub-menú boletín"
+                      >
+                        {isBoletinMenuOpen ? (
+                          <ChevronDown className="h-3.5 w-3.5" />
+                        ) : (
+                          <ChevronRight className="h-3.5 w-3.5" />
+                        )}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Sub-menú de Boletín Oficial (Drive) */}
+                  {cat.id === "boletin_drive" && isBoletinMenuOpen && (
+                    <div className="ml-3 pl-3 py-1 space-y-1 border-l-2 border-cyan-500/30 text-xs">
+                      {/* Sub-item: Todas las ediciones */}
+                      <button
+                        onClick={() => {
+                          onSelectCategory("boletin_drive");
+                          onSelectBoletinFilter?.({
+                            year: "all",
+                            month: "all",
+                            topic: "all",
+                            search: "",
+                          });
+                          if (onCloseMobile) onCloseMobile();
+                        }}
+                        className={cn(
+                          "w-full flex items-center justify-between px-2 py-1 rounded text-[11px] font-medium transition-colors group",
+                          selectedCategory === "boletin_drive" &&
+                            boletinFilter.year === "all" &&
+                            boletinFilter.topic === "all" &&
+                            !boletinFilter.search
+                            ? "bg-cyan-500/15 text-cyan-800 dark:text-cyan-200 font-semibold"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        )}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <Layers className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                          <span>Todas las ediciones</span>
+                        </div>
+                        <span className="font-mono text-[10px] text-muted-foreground">653</span>
+                      </button>
+
+                      {/* Sub-item: Seguridad & Policía TDF */}
+                      <button
+                        onClick={() => {
+                          onSelectCategory("boletin_drive");
+                          onSelectBoletinFilter?.({
+                            year: "all",
+                            month: "all",
+                            topic: "Seguridad & Policía de Tierra del Fuego",
+                            search: "",
+                          });
+                          if (onCloseMobile) onCloseMobile();
+                        }}
+                        className={cn(
+                          "w-full flex items-center justify-between px-2 py-1.5 rounded text-[11px] font-medium transition-colors group",
+                          selectedCategory === "boletin_drive" &&
+                            boletinFilter.topic === "Seguridad & Policía de Tierra del Fuego"
+                            ? "bg-blue-600/20 text-blue-900 dark:text-blue-200 border-l-2 border-blue-600 font-bold"
+                            : "text-blue-800/80 dark:text-blue-300/80 hover:text-blue-900 dark:hover:text-blue-200 hover:bg-blue-500/10"
+                        )}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <ShieldCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                          <div className="text-left">
+                            <span className="block leading-tight">Seguridad & Policía</span>
+                            <span className="block text-[9px] text-muted-foreground font-normal">
+                              6 casos c/ facsímil
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-1 shrink-0">
+                          <span className="text-[9px] bg-blue-600 text-white px-1 rounded font-mono">
+                            Casos
+                          </span>
+                          <span className="font-mono text-[10px] text-muted-foreground">384</span>
+                        </div>
+                      </button>
+
+                      {/* Sub-item: Año 2026 */}
+                      <button
+                        onClick={() => {
+                          onSelectCategory("boletin_drive");
+                          onSelectBoletinFilter?.({
+                            year: 2026,
+                            month: "all",
+                            topic: "all",
+                            search: "",
+                          });
+                          if (onCloseMobile) onCloseMobile();
+                        }}
+                        className={cn(
+                          "w-full flex items-center justify-between px-2 py-1 rounded text-[11px] font-medium transition-colors group",
+                          selectedCategory === "boletin_drive" &&
+                            boletinFilter.year === 2026 &&
+                            boletinFilter.topic !== "Seguridad & Policía de Tierra del Fuego"
+                            ? "bg-cyan-500/20 text-cyan-900 dark:text-cyan-200 font-bold border-l-2 border-cyan-500"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        )}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                          <div className="text-left">
+                            <span className="block leading-tight">Año 2026</span>
+                            <span className="block text-[9px] text-muted-foreground font-normal">
+                              Ene a Sep 2026
+                            </span>
+                          </div>
+                        </div>
+                        <span className="font-mono text-[10px] text-cyan-700 dark:text-cyan-300 font-semibold">
+                          218
                         </span>
-                        <span className="text-[10px] text-cyan-600/90 dark:text-cyan-400/90 shrink-0 font-medium group-hover/link:underline">
-                          Carpeta ↗
+                      </button>
+
+                      {/* Sub-item: Año 2025 */}
+                      <button
+                        onClick={() => {
+                          onSelectCategory("boletin_drive");
+                          onSelectBoletinFilter?.({
+                            year: 2025,
+                            month: "all",
+                            topic: "all",
+                            search: "",
+                          });
+                          if (onCloseMobile) onCloseMobile();
+                        }}
+                        className={cn(
+                          "w-full flex items-center justify-between px-2 py-1 rounded text-[11px] font-medium transition-colors group",
+                          selectedCategory === "boletin_drive" &&
+                            boletinFilter.year === 2025 &&
+                            boletinFilter.topic !== "Seguridad & Policía de Tierra del Fuego"
+                            ? "bg-emerald-500/20 text-emerald-900 dark:text-emerald-200 font-bold border-l-2 border-emerald-500"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        )}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                          <div className="text-left">
+                            <span className="block leading-tight">Año 2025</span>
+                            <span className="block text-[9px] text-muted-foreground font-normal">
+                              12 meses completos
+                            </span>
+                          </div>
+                        </div>
+                        <span className="font-mono text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold">
+                          236
                         </span>
-                      </a>
+                      </button>
+
+                      {/* Sub-item: Año 2024 */}
+                      <button
+                        onClick={() => {
+                          onSelectCategory("boletin_drive");
+                          onSelectBoletinFilter?.({
+                            year: 2024,
+                            month: "all",
+                            topic: "all",
+                            search: "",
+                          });
+                          if (onCloseMobile) onCloseMobile();
+                        }}
+                        className={cn(
+                          "w-full flex items-center justify-between px-2 py-1 rounded text-[11px] font-medium transition-colors group",
+                          selectedCategory === "boletin_drive" &&
+                            boletinFilter.year === 2024 &&
+                            boletinFilter.topic !== "Seguridad & Policía de Tierra del Fuego"
+                            ? "bg-amber-500/20 text-amber-900 dark:text-amber-200 font-bold border-l-2 border-amber-500"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        )}
+                      >
+                        <div className="flex items-center space-x-2">
+                          <Calendar className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+                          <div className="text-left">
+                            <span className="block leading-tight">Año 2024</span>
+                            <span className="block text-[9px] text-muted-foreground font-normal">
+                              Mar a Dic 2024
+                            </span>
+                          </div>
+                        </div>
+                        <span className="font-mono text-[10px] text-amber-700 dark:text-amber-300 font-semibold">
+                          199
+                        </span>
+                      </button>
+
+                      {/* Sub-item: Ejes Temáticos Collapsible */}
+                      <div className="pt-0.5 space-y-0.5">
+                        <button
+                          onClick={() => setIsThematicSubMenuOpen(!isThematicSubMenuOpen)}
+                          className="w-full flex items-center justify-between px-2 py-1 rounded text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <Tag className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+                            <span>Ejes Temáticos</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <span className="font-mono text-[10px]">10</span>
+                            {isThematicSubMenuOpen ? (
+                              <ChevronDown className="h-3 w-3" />
+                            ) : (
+                              <ChevronRight className="h-3 w-3" />
+                            )}
+                          </div>
+                        </button>
+
+                        {isThematicSubMenuOpen && (
+                          <div className="pl-3 py-0.5 space-y-0.5 border-l border-border/60 ml-2 text-[10px]">
+                            {[
+                              { id: "Salud & Bienestar", label: "Salud & Bienestar", count: 226 },
+                              { id: "Educación & Ciencia", label: "Educación & Ciencia", count: 405 },
+                              { id: "Economía, Hacienda & AREF", label: "Economía / AREF", count: 498 },
+                              { id: "Ambiente & Recursos Naturales", label: "Ambiente & Recursos", count: 326 },
+                              { id: "Obras Públicas & Vialidad", label: "Obras Públicas", count: 86 },
+                              { id: "Turismo & Cultura", label: "Turismo & Cultura", count: 22 },
+                              { id: "Puertos & Vías Navegables", label: "Puertos & Vías", count: 18 },
+                              { id: "Vivienda, Hábitat & Tierras", label: "Vivienda & Hábitat", count: 129 },
+                            ].map((topic) => {
+                              const isTopicSelected =
+                                selectedCategory === "boletin_drive" && boletinFilter.topic === topic.id;
+                              return (
+                                <button
+                                  key={topic.id}
+                                  onClick={() => {
+                                    onSelectCategory("boletin_drive");
+                                    onSelectBoletinFilter?.({
+                                      year: "all",
+                                      month: "all",
+                                      topic: topic.id,
+                                      search: "",
+                                    });
+                                    if (onCloseMobile) onCloseMobile();
+                                  }}
+                                  className={cn(
+                                    "w-full flex items-center justify-between px-2 py-0.5 rounded text-left transition-colors",
+                                    isTopicSelected
+                                      ? "bg-primary/15 text-primary font-semibold"
+                                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                                  )}
+                                >
+                                  <span className="truncate">{topic.label}</span>
+                                  <span className="font-mono text-[9px] opacity-75">{topic.count}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* External Link to Google Drive Root Folder */}
+                      <div className="pt-1">
+                        <a
+                          href="https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group/link flex items-center justify-between w-full px-2 py-1 rounded border border-cyan-500/25 bg-cyan-500/5 hover:bg-cyan-500/15 hover:border-cyan-500/40 transition-all text-[11px]"
+                        >
+                          <span className="flex items-center space-x-1.5 text-cyan-800 dark:text-cyan-300 font-medium truncate">
+                            <HardDrive className="h-3 w-3 shrink-0" />
+                            <span className="truncate">Google Drive TDF</span>
+                          </span>
+                          <span className="text-[9px] text-cyan-600 dark:text-cyan-400 font-mono group-hover/link:underline">
+                            Carpeta ↗
+                          </span>
+                        </a>
+                      </div>
                     </div>
                   )}
                 </div>

@@ -3,720 +3,460 @@
 import * as React from "react";
 import {
   FileText,
-  FileCheck,
-  Scale,
-  ShoppingBag,
+  Search,
+  Calendar,
   Layers,
   Sparkles,
-  MapPin,
-  X,
-  Library,
-  BookOpen,
-  GraduationCap,
-  Newspaper,
-  Laptop,
-  Building,
+  RefreshCw,
   HardDrive,
   Landmark,
-  ScrollText,
-  ExternalLink,
-  Calendar,
   ShieldCheck,
   ChevronDown,
   ChevronRight,
-  Tag,
+  ExternalLink,
+  CheckCircle2,
+  FolderOpen,
+  X,
+  FileCheck2,
+  FileStack,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { THEMATIC_AREAS } from "@/lib/driveBoletines";
 
 export type CategoryKey =
   | "todos"
-  | "sumario_legis"
-  | "decretos"
-  | "resoluciones"
-  | "leyes"
-  | "licitaciones"
-  | "boletin_drive"
-  | "biblioteca"
-  | "biblioteca_libros"
-  | "biblioteca_doctrina"
-  | "biblioteca_revistas"
-  | "biblioteca_digital";
+  | "boletin_oficial"
+  | "separatas"
+  | "ordinarias";
 
 export interface BoletinFilterState {
   year: number | "all";
   month: number | "all";
   topic: string | "all";
+  editionNumber?: string;
+  isSeparata?: boolean | "all";
   search: string;
 }
 
 interface SidebarProps {
-  selectedCategory: CategoryKey;
-  onSelectCategory: (category: CategoryKey) => void;
+  selectedCategory?: CategoryKey;
+  onSelectCategory?: (category: CategoryKey) => void;
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
-  documentCounts?: Record<CategoryKey, number>;
-  boletinFilter?: BoletinFilterState;
-  onSelectBoletinFilter?: (filter: BoletinFilterState) => void;
+  boletinFilter: BoletinFilterState;
+  onSelectBoletinFilter: (filter: BoletinFilterState) => void;
+  totalEditions?: number;
+  yearCounts?: Record<number, number>;
+  onTriggerSync?: () => void;
+  isSyncing?: boolean;
 }
 
+const MONTHS_LIST = [
+  { id: 1, name: "Enero", short: "Ene" },
+  { id: 2, name: "Febrero", short: "Feb" },
+  { id: 3, name: "Marzo", short: "Mar" },
+  { id: 4, name: "Abril", short: "Abr" },
+  { id: 5, name: "Mayo", short: "May" },
+  { id: 6, name: "Junio", short: "Jun" },
+  { id: 7, name: "Julio", short: "Jul" },
+  { id: 8, name: "Agosto", short: "Ago" },
+  { id: 9, name: "Septiembre", short: "Sep" },
+  { id: 10, name: "Octubre", short: "Oct" },
+  { id: 11, name: "Noviembre", short: "Nov" },
+  { id: 12, name: "Diciembre", short: "Dic" },
+];
+
 export function Sidebar({
-  selectedCategory,
-  onSelectCategory,
   isOpenMobile = false,
   onCloseMobile,
-  documentCounts = {
-    todos: 860,
-    sumario_legis: 197,
-    decretos: 18,
-    resoluciones: 16,
-    leyes: 6,
-    licitaciones: 8,
-    boletin_drive: 653,
-    biblioteca: 8,
-    biblioteca_libros: 2,
-    biblioteca_doctrina: 2,
-    biblioteca_revistas: 2,
-    biblioteca_digital: 2,
-  },
-  boletinFilter = {
-    year: "all",
-    month: "all",
-    topic: "all",
-    search: "",
-  },
+  boletinFilter,
   onSelectBoletinFilter,
+  totalEditions = 653,
+  yearCounts = { 2026: 218, 2025: 236, 2024: 199 },
+  onTriggerSync,
+  isSyncing = false,
 }: SidebarProps) {
-  const [isBoletinMenuOpen, setIsBoletinMenuOpen] = React.useState(true);
-  const [isThematicSubMenuOpen, setIsThematicSubMenuOpen] = React.useState(false);
+  const [isThematicOpen, setIsThematicOpen] = React.useState(true);
+  const [isMonthsOpen, setIsMonthsOpen] = React.useState(true);
+  const [editionInput, setEditionInput] = React.useState(boletinFilter.editionNumber || "");
 
-  const normativaCategories: {
-    id: CategoryKey;
-    label: string;
-    icon: React.ComponentType<{ className?: string }>;
-    color: string;
-  }[] = [
-    { id: "decretos", label: "Decretos", icon: FileText, color: "text-amber-600 dark:text-amber-400" },
-    { id: "resoluciones", label: "Resoluciones", icon: FileCheck, color: "text-sky-600 dark:text-sky-400" },
-    { id: "leyes", label: "Leyes", icon: Scale, color: "text-emerald-600 dark:text-emerald-400" },
-    { id: "licitaciones", label: "Licitaciones", icon: ShoppingBag, color: "text-purple-600 dark:text-purple-400" },
-    { id: "boletin_drive", label: "Boletines Oficiales (Drive)", icon: HardDrive, color: "text-cyan-600 dark:text-cyan-400" },
-  ];
+  // Actualizar búsqueda por número de edición
+  const handleEditionSearch = (val: string) => {
+    setEditionInput(val);
+    onSelectBoletinFilter({
+      ...boletinFilter,
+      editionNumber: val.trim() || undefined,
+    });
+  };
 
-  const bibliotecaCategories: {
-    id: CategoryKey;
-    label: string;
-    icon: React.ComponentType<{ className?: string }>;
-    color: string;
-  }[] = [
-    { id: "biblioteca", label: "Todos los catálogos", icon: Library, color: "text-blue-600 dark:text-blue-400" },
-    { id: "biblioteca_libros", label: "Libros & Tratados", icon: BookOpen, color: "text-indigo-600 dark:text-indigo-400" },
-    { id: "biblioteca_doctrina", label: "Doctrina & Artículos", icon: GraduationCap, color: "text-rose-600 dark:text-rose-400" },
-    { id: "biblioteca_revistas", label: "Revistas Jurídicas", icon: Newspaper, color: "text-teal-600 dark:text-teal-400" },
-    { id: "biblioteca_digital", label: "Recursos Digitales", icon: Laptop, color: "text-violet-600 dark:text-violet-400" },
-  ];
+  const handleYearChange = (year: number | "all") => {
+    onSelectBoletinFilter({
+      ...boletinFilter,
+      year,
+    });
+  };
+
+  const handleMonthChange = (month: number | "all") => {
+    onSelectBoletinFilter({
+      ...boletinFilter,
+      month: boletinFilter.month === month ? "all" : month,
+    });
+  };
+
+  const handleTopicChange = (topic: string | "all") => {
+    onSelectBoletinFilter({
+      ...boletinFilter,
+      topic: boletinFilter.topic === topic ? "all" : topic,
+    });
+  };
+
+  const handleTypeChange = (isSeparata: boolean | "all") => {
+    onSelectBoletinFilter({
+      ...boletinFilter,
+      isSeparata,
+    });
+  };
+
+  const handleResetFilters = () => {
+    setEditionInput("");
+    onSelectBoletinFilter({
+      year: "all",
+      month: "all",
+      topic: "all",
+      editionNumber: undefined,
+      isSeparata: "all",
+      search: "",
+    });
+  };
+
+  const activeFiltersCount =
+    (boletinFilter.year !== "all" ? 1 : 0) +
+    (boletinFilter.month !== "all" ? 1 : 0) +
+    (boletinFilter.topic !== "all" ? 1 : 0) +
+    (boletinFilter.editionNumber ? 1 : 0) +
+    (boletinFilter.isSeparata && boletinFilter.isSeparata !== "all" ? 1 : 0) +
+    (boletinFilter.search ? 1 : 0);
 
   return (
-    <>
-      {/* Mobile backdrop */}
-      {isOpenMobile && (
-        <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden transition-opacity"
-          onClick={onCloseMobile}
-        />
+    <aside
+      className={cn(
+        "fixed inset-y-0 left-0 z-40 w-80 bg-card border-r border-border transition-transform duration-200 ease-in-out md:translate-x-0 md:static flex flex-col shadow-sm",
+        isOpenMobile ? "translate-x-0" : "-translate-x-full"
       )}
-
-      <aside
-        className={cn(
-          "fixed top-0 bottom-0 left-0 z-50 w-72 flex-col bg-background/95 backdrop-blur border-r border-border transition-transform duration-300 ease-in-out lg:static lg:flex lg:translate-x-0",
-          isOpenMobile ? "translate-x-0 flex" : "-translate-x-full"
-        )}
-      >
-        {/* Brand & Jurisdiction Header */}
-        <div className="flex h-16 items-center justify-between px-6 border-b border-border/80">
-          <div className="flex items-center space-x-3">
-            <div className="h-9 w-9 rounded-lg overflow-hidden border border-border/60 shadow-sm shrink-0 bg-black flex items-center justify-center">
-              <img
-                src="/logo.png"
-                alt="lex-assist logo"
-                className="h-full w-full object-cover"
-              />
+    >
+      {/* Encabezado Institucional Exclusivo */}
+      <div className="p-4 border-b border-border bg-gradient-to-b from-blue-950/10 to-transparent dark:from-blue-950/30">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/30">
+              <Landmark className="h-5 w-5" />
             </div>
             <div>
-              <span className="font-serif font-semibold tracking-tight text-lg text-foreground">
-                lex-assist
-              </span>
-              <span className="block text-[10px] uppercase font-sans tracking-widest text-muted-foreground">
-                Asistencia Legal & IA
-              </span>
+              <h1 className="font-bold text-base tracking-tight text-foreground flex items-center gap-1.5">
+                Boletín Oficial
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-blue-500/40 text-blue-600 dark:text-blue-400 font-semibold">
+                  TDF
+                </Badge>
+              </h1>
+              <p className="text-[11px] text-muted-foreground font-medium">
+                Gobierno de Tierra del Fuego, AeIAS
+              </p>
             </div>
           </div>
-
-          {isOpenMobile && (
+          {onCloseMobile && (
             <Button
               variant="ghost"
               size="icon"
-              className="lg:hidden"
+              className="md:hidden h-8 w-8 text-muted-foreground"
               onClick={onCloseMobile}
-              aria-label="Cerrar menú"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </Button>
           )}
         </div>
 
-        {/* Territory Chip */}
-        <div className="p-3">
-          <div className="rounded-lg border border-border/60 bg-muted/40 p-2.5 flex items-start space-x-2.5">
-            <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-            <div className="text-xs">
-              <span className="font-medium text-foreground block">
-                Tierra del Fuego, AeIAS
-              </span>
-              <span className="text-muted-foreground block text-[11px]">
-                Boletín Oficial • Biblioteca PJ • LegisTDF
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <Separator className="opacity-60" />
-
-        {/* Navigation Categories */}
-        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-4">
-          {/* General: Todas las fuentes */}
-          <div>
-            <button
-              onClick={() => {
-                onSelectCategory("todos");
-                if (onCloseMobile) onCloseMobile();
-              }}
-              className={cn(
-                "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium transition-all group",
-                selectedCategory === "todos"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-              )}
-            >
-              <div className="flex items-center space-x-3">
-                <Layers className="h-4 w-4 text-muted-foreground" />
-                <span>Todas las fuentes</span>
-              </div>
-              <span
-                className={cn(
-                  "text-xs px-2 py-0.5 rounded-full font-mono transition-colors",
-                  selectedCategory === "todos"
-                    ? "bg-white/20 text-white"
-                    : "bg-muted text-muted-foreground group-hover:bg-muted-foreground/15"
-                )}
-              >
-                {documentCounts.todos ?? 0}
-              </span>
-            </button>
-          </div>
-
-          {/* Section: Poder Legislativo (LegisTDF) */}
-          <div className="space-y-1">
-            <div className="px-3 pb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400">
-              <span className="flex items-center space-x-1.5">
-                <Landmark className="h-3 w-3" />
-                <span>Poder Legislativo</span>
-              </span>
-              <a
-                href="https://buscar.legistdf.gob.ar/sumario_completo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center space-x-1 text-[9px] px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-700 dark:text-orange-300 hover:bg-orange-500/20 transition-colors"
-                title="Acceso directo al sitio oficial LegisTDF"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <span>Sitio oficial</span>
-                <ExternalLink className="h-2.5 w-2.5" />
-              </a>
-            </div>
-
-            <button
-              onClick={() => {
-                onSelectCategory("sumario_legis");
-                if (onCloseMobile) onCloseMobile();
-              }}
-              className={cn(
-                "w-full flex items-center justify-between px-3 py-1.5 rounded-md text-sm font-medium transition-all group",
-                selectedCategory === "sumario_legis"
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-              )}
-            >
-              <div className="flex items-center space-x-2.5">
-                <ScrollText
-                  className={cn(
-                    "h-4 w-4 transition-colors",
-                    selectedCategory === "sumario_legis"
-                      ? "text-primary-foreground"
-                      : "text-orange-600 dark:text-orange-400"
-                  )}
-                />
-                <span className="text-xs">Sumario de Asuntos</span>
-              </div>
-
-              <span
-                className={cn(
-                  "text-[11px] px-1.5 py-0.5 rounded-full font-mono transition-colors",
-                  selectedCategory === "sumario_legis"
-                    ? "bg-white/20 text-white"
-                    : "bg-muted text-muted-foreground group-hover:bg-muted-foreground/15"
-                )}
-              >
-                {documentCounts.sumario_legis ?? 197}
-              </span>
-            </button>
-
-            {/* Acceso directo al sitio oficial */}
-            <div className="px-1 pt-0.5">
-              <a
-                href="https://buscar.legistdf.gob.ar/sumario_completo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group/link flex items-center justify-between w-full px-2.5 py-1.5 rounded-md border border-orange-500/25 bg-orange-500/5 hover:bg-orange-500/10 hover:border-orange-500/40 transition-all text-xs"
-              >
-                <span className="flex items-center space-x-1.5 text-[11px] text-orange-700 dark:text-orange-300 font-medium truncate">
-                  <ExternalLink className="h-3 w-3 shrink-0" />
-                  <span className="truncate">buscar.legistdf.gob.ar</span>
-                </span>
-                <span className="text-[10px] text-orange-600/90 dark:text-orange-400/90 shrink-0 font-medium group-hover/link:underline">
-                  Oficial ↗
-                </span>
-              </a>
-            </div>
-          </div>
-
-          {/* Section: Biblioteca del Poder Judicial (Koha) */}
-          <div className="space-y-1">
-            <div className="px-3 pb-1 flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-primary">
-              <span className="flex items-center space-x-1.5">
-                <Library className="h-3 w-3" />
-                <span>Biblioteca Judicial</span>
-              </span>
-              <Badge variant="subtle" className="text-[9px] px-1 py-0">
-                Koha
-              </Badge>
-            </div>
-
-            {bibliotecaCategories.map((cat) => {
-              const Icon = cat.icon;
-              const isSelected = selectedCategory === cat.id;
-
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    onSelectCategory(cat.id);
-                    if (onCloseMobile) onCloseMobile();
-                  }}
-                  className={cn(
-                    "w-full flex items-center justify-between px-3 py-1.5 rounded-md text-sm font-medium transition-all group",
-                    isSelected
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                  )}
-                >
-                  <div className="flex items-center space-x-2.5">
-                    <Icon
-                      className={cn(
-                        "h-4 w-4 transition-colors",
-                        isSelected ? "text-primary-foreground" : cat.color
-                      )}
-                    />
-                    <span className="text-xs">{cat.label}</span>
-                  </div>
-
-                  <span
-                    className={cn(
-                      "text-[11px] px-1.5 py-0.5 rounded-full font-mono transition-colors",
-                      isSelected
-                        ? "bg-white/20 text-white"
-                        : "bg-muted text-muted-foreground group-hover:bg-muted-foreground/15"
-                    )}
-                  >
-                    {documentCounts[cat.id] ?? 0}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Section: Boletín Oficial & Normativa */}
-          <div className="space-y-1">
-            <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Boletín Oficial
-            </div>
-
-            {normativaCategories.map((cat) => {
-              const Icon = cat.icon;
-              const isSelected = selectedCategory === cat.id;
-
-              return (
-                <div key={cat.id} className="space-y-1">
-                  {/* Render category button */}
-                  <div className="flex items-center">
-                    <button
-                      onClick={() => {
-                        onSelectCategory(cat.id);
-                        if (cat.id === "boletin_drive") {
-                          setIsBoletinMenuOpen(true);
-                        }
-                        if (onCloseMobile) onCloseMobile();
-                      }}
-                      className={cn(
-                        "flex-1 flex items-center justify-between px-3 py-1.5 rounded-md text-sm font-medium transition-all group",
-                        isSelected
-                          ? "bg-primary text-primary-foreground shadow-sm"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                      )}
-                    >
-                      <div className="flex items-center space-x-2.5">
-                        <Icon
-                          className={cn(
-                            "h-4 w-4 transition-colors",
-                            isSelected ? "text-primary-foreground" : cat.color
-                          )}
-                        />
-                        <span className="text-xs">{cat.label}</span>
-                      </div>
-
-                      <span
-                        className={cn(
-                          "text-[11px] px-1.5 py-0.5 rounded-full font-mono transition-colors",
-                          isSelected
-                            ? "bg-white/20 text-white"
-                            : "bg-muted text-muted-foreground group-hover:bg-muted-foreground/15"
-                        )}
-                      >
-                        {documentCounts[cat.id] ?? 0}
-                      </span>
-                    </button>
-
-                    {/* Toggle button for sub-menu if boletin_drive */}
-                    {cat.id === "boletin_drive" && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setIsBoletinMenuOpen(!isBoletinMenuOpen);
-                        }}
-                        className="ml-1 p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
-                        title={isBoletinMenuOpen ? "Contraer sub-menú" : "Expandir sub-menú"}
-                        aria-label="Toggle sub-menú boletín"
-                      >
-                        {isBoletinMenuOpen ? (
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        ) : (
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        )}
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Sub-menú de Boletín Oficial (Drive) */}
-                  {cat.id === "boletin_drive" && isBoletinMenuOpen && (
-                    <div className="ml-3 pl-3 py-1 space-y-1 border-l-2 border-cyan-500/30 text-xs">
-                      {/* Sub-item: Todas las ediciones */}
-                      <button
-                        onClick={() => {
-                          onSelectCategory("boletin_drive");
-                          onSelectBoletinFilter?.({
-                            year: "all",
-                            month: "all",
-                            topic: "all",
-                            search: "",
-                          });
-                          if (onCloseMobile) onCloseMobile();
-                        }}
-                        className={cn(
-                          "w-full flex items-center justify-between px-2 py-1 rounded text-[11px] font-medium transition-colors group",
-                          selectedCategory === "boletin_drive" &&
-                            boletinFilter.year === "all" &&
-                            boletinFilter.topic === "all" &&
-                            !boletinFilter.search
-                            ? "bg-cyan-500/15 text-cyan-800 dark:text-cyan-200 font-semibold"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                        )}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <Layers className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-                          <span>Todas las ediciones</span>
-                        </div>
-                        <span className="font-mono text-[10px] text-muted-foreground">653</span>
-                      </button>
-
-                      {/* Sub-item: Seguridad & Policía TDF */}
-                      <button
-                        onClick={() => {
-                          onSelectCategory("boletin_drive");
-                          onSelectBoletinFilter?.({
-                            year: "all",
-                            month: "all",
-                            topic: "Seguridad & Policía de Tierra del Fuego",
-                            search: "",
-                          });
-                          if (onCloseMobile) onCloseMobile();
-                        }}
-                        className={cn(
-                          "w-full flex items-center justify-between px-2 py-1.5 rounded text-[11px] font-medium transition-colors group",
-                          selectedCategory === "boletin_drive" &&
-                            boletinFilter.topic === "Seguridad & Policía de Tierra del Fuego"
-                            ? "bg-blue-600/20 text-blue-900 dark:text-blue-200 border-l-2 border-blue-600 font-bold"
-                            : "text-blue-800/80 dark:text-blue-300/80 hover:text-blue-900 dark:hover:text-blue-200 hover:bg-blue-500/10"
-                        )}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <ShieldCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
-                          <div className="text-left">
-                            <span className="block leading-tight">Seguridad & Policía</span>
-                            <span className="block text-[9px] text-muted-foreground font-normal">
-                              6 casos c/ facsímil
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-1 shrink-0">
-                          <span className="text-[9px] bg-blue-600 text-white px-1 rounded font-mono">
-                            Casos
-                          </span>
-                          <span className="font-mono text-[10px] text-muted-foreground">384</span>
-                        </div>
-                      </button>
-
-                      {/* Sub-item: Año 2026 */}
-                      <button
-                        onClick={() => {
-                          onSelectCategory("boletin_drive");
-                          onSelectBoletinFilter?.({
-                            year: 2026,
-                            month: "all",
-                            topic: "all",
-                            search: "",
-                          });
-                          if (onCloseMobile) onCloseMobile();
-                        }}
-                        className={cn(
-                          "w-full flex items-center justify-between px-2 py-1 rounded text-[11px] font-medium transition-colors group",
-                          selectedCategory === "boletin_drive" &&
-                            boletinFilter.year === 2026 &&
-                            boletinFilter.topic !== "Seguridad & Policía de Tierra del Fuego"
-                            ? "bg-cyan-500/20 text-cyan-900 dark:text-cyan-200 font-bold border-l-2 border-cyan-500"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                        )}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-                          <div className="text-left">
-                            <span className="block leading-tight">Año 2026</span>
-                            <span className="block text-[9px] text-muted-foreground font-normal">
-                              Ene a Sep 2026
-                            </span>
-                          </div>
-                        </div>
-                        <span className="font-mono text-[10px] text-cyan-700 dark:text-cyan-300 font-semibold">
-                          218
-                        </span>
-                      </button>
-
-                      {/* Sub-item: Año 2025 */}
-                      <button
-                        onClick={() => {
-                          onSelectCategory("boletin_drive");
-                          onSelectBoletinFilter?.({
-                            year: 2025,
-                            month: "all",
-                            topic: "all",
-                            search: "",
-                          });
-                          if (onCloseMobile) onCloseMobile();
-                        }}
-                        className={cn(
-                          "w-full flex items-center justify-between px-2 py-1 rounded text-[11px] font-medium transition-colors group",
-                          selectedCategory === "boletin_drive" &&
-                            boletinFilter.year === 2025 &&
-                            boletinFilter.topic !== "Seguridad & Policía de Tierra del Fuego"
-                            ? "bg-emerald-500/20 text-emerald-900 dark:text-emerald-200 font-bold border-l-2 border-emerald-500"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                        )}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                          <div className="text-left">
-                            <span className="block leading-tight">Año 2025</span>
-                            <span className="block text-[9px] text-muted-foreground font-normal">
-                              12 meses completos
-                            </span>
-                          </div>
-                        </div>
-                        <span className="font-mono text-[10px] text-emerald-700 dark:text-emerald-300 font-semibold">
-                          236
-                        </span>
-                      </button>
-
-                      {/* Sub-item: Año 2024 */}
-                      <button
-                        onClick={() => {
-                          onSelectCategory("boletin_drive");
-                          onSelectBoletinFilter?.({
-                            year: 2024,
-                            month: "all",
-                            topic: "all",
-                            search: "",
-                          });
-                          if (onCloseMobile) onCloseMobile();
-                        }}
-                        className={cn(
-                          "w-full flex items-center justify-between px-2 py-1 rounded text-[11px] font-medium transition-colors group",
-                          selectedCategory === "boletin_drive" &&
-                            boletinFilter.year === 2024 &&
-                            boletinFilter.topic !== "Seguridad & Policía de Tierra del Fuego"
-                            ? "bg-amber-500/20 text-amber-900 dark:text-amber-200 font-bold border-l-2 border-amber-500"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                        )}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                          <div className="text-left">
-                            <span className="block leading-tight">Año 2024</span>
-                            <span className="block text-[9px] text-muted-foreground font-normal">
-                              Mar a Dic 2024
-                            </span>
-                          </div>
-                        </div>
-                        <span className="font-mono text-[10px] text-amber-700 dark:text-amber-300 font-semibold">
-                          199
-                        </span>
-                      </button>
-
-                      {/* Sub-item: Ejes Temáticos Collapsible */}
-                      <div className="pt-0.5 space-y-0.5">
-                        <button
-                          onClick={() => setIsThematicSubMenuOpen(!isThematicSubMenuOpen)}
-                          className="w-full flex items-center justify-between px-2 py-1 rounded text-[11px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <Tag className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-                            <span>Ejes Temáticos</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <span className="font-mono text-[10px]">10</span>
-                            {isThematicSubMenuOpen ? (
-                              <ChevronDown className="h-3 w-3" />
-                            ) : (
-                              <ChevronRight className="h-3 w-3" />
-                            )}
-                          </div>
-                        </button>
-
-                        {isThematicSubMenuOpen && (
-                          <div className="pl-3 py-0.5 space-y-0.5 border-l border-border/60 ml-2 text-[10px]">
-                            {[
-                              { id: "Salud & Bienestar", label: "Salud & Bienestar", count: 226 },
-                              { id: "Educación & Ciencia", label: "Educación & Ciencia", count: 405 },
-                              { id: "Economía, Hacienda & AREF", label: "Economía / AREF", count: 498 },
-                              { id: "Ambiente & Recursos Naturales", label: "Ambiente & Recursos", count: 326 },
-                              { id: "Obras Públicas & Vialidad", label: "Obras Públicas", count: 86 },
-                              { id: "Turismo & Cultura", label: "Turismo & Cultura", count: 22 },
-                              { id: "Puertos & Vías Navegables", label: "Puertos & Vías", count: 18 },
-                              { id: "Vivienda, Hábitat & Tierras", label: "Vivienda & Hábitat", count: 129 },
-                            ].map((topic) => {
-                              const isTopicSelected =
-                                selectedCategory === "boletin_drive" && boletinFilter.topic === topic.id;
-                              return (
-                                <button
-                                  key={topic.id}
-                                  onClick={() => {
-                                    onSelectCategory("boletin_drive");
-                                    onSelectBoletinFilter?.({
-                                      year: "all",
-                                      month: "all",
-                                      topic: topic.id,
-                                      search: "",
-                                    });
-                                    if (onCloseMobile) onCloseMobile();
-                                  }}
-                                  className={cn(
-                                    "w-full flex items-center justify-between px-2 py-0.5 rounded text-left transition-colors",
-                                    isTopicSelected
-                                      ? "bg-primary/15 text-primary font-semibold"
-                                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-                                  )}
-                                >
-                                  <span className="truncate">{topic.label}</span>
-                                  <span className="font-mono text-[9px] opacity-75">{topic.count}</span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-
-                      {/* External Link to Google Drive Root Folder */}
-                      <div className="pt-1">
-                        <a
-                          href="https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group/link flex items-center justify-between w-full px-2 py-1 rounded border border-cyan-500/25 bg-cyan-500/5 hover:bg-cyan-500/15 hover:border-cyan-500/40 transition-all text-[11px]"
-                        >
-                          <span className="flex items-center space-x-1.5 text-cyan-800 dark:text-cyan-300 font-medium truncate">
-                            <HardDrive className="h-3 w-3 shrink-0" />
-                            <span className="truncate">Google Drive TDF</span>
-                          </span>
-                          <span className="text-[9px] text-cyan-600 dark:text-cyan-400 font-mono group-hover/link:underline">
-                            Carpeta ↗
-                          </span>
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Sedes Físicas Informativas */}
-          <div className="rounded-md border border-border/70 bg-card/60 p-2.5 space-y-1 text-xs">
-            <div className="flex items-center space-x-1.5 font-medium text-foreground text-[11px]">
-              <Building className="h-3 w-3 text-muted-foreground" />
-              <span>Sedes Biblioteca PJ TDF</span>
-            </div>
-            <div className="text-[10px] text-muted-foreground space-y-0.5 pl-4">
-              <div>• Sede Sur (Ushuaia - DJS)</div>
-              <div>• Sede Norte (Río Grande - DJN)</div>
-              <div>• Recursos Digitales (AEL)</div>
-            </div>
-          </div>
-
-          {/* AI Banner */}
-          <div className="rounded-md border border-primary/20 bg-primary/5 p-2.5 text-xs space-y-1">
-            <div className="flex items-center space-x-1.5 font-medium text-primary text-[11px]">
-              <Sparkles className="h-3 w-3" />
-              <span>Búsqueda Semántica & IA</span>
-            </div>
-            <p className="text-muted-foreground text-[10px] leading-relaxed">
-              Indexación unificada de boletines y catálogos de doctrina judicial.
-            </p>
-          </div>
-        </div>
-
-        {/* Footer info */}
-        <div className="p-3 border-t border-border/80 text-[10px] text-muted-foreground space-y-1">
+        {/* Indicador de Base de Datos Sincronizada */}
+        <div className="mt-3.5 p-2.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-900/50 flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <span>Sincronización</span>
-            <Badge variant="subtle" className="text-[9px] px-1.5 py-0">
-              Koha & Boletín
+            <span className="text-[11px] font-semibold text-blue-900 dark:text-blue-200 flex items-center gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+              Base de Datos Actualizada
+            </span>
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-blue-100 dark:bg-blue-900/80 text-blue-800 dark:text-blue-300 font-mono">
+              {totalEditions} eds.
             </Badge>
           </div>
-          <div className="text-muted-foreground/75">
-            v0.2.0 • Licencia MIT
+          <div className="flex items-center justify-between text-[10px] text-blue-700/80 dark:text-blue-300/70">
+            <span>Años: 2024, 2025, 2026</span>
+            <button
+              onClick={onTriggerSync}
+              disabled={isSyncing}
+              className="hover:underline flex items-center gap-1 text-blue-700 dark:text-blue-300 font-medium disabled:opacity-50"
+              title="Sincronizar base de datos"
+            >
+              <RefreshCw className={cn("h-2.5 w-2.5", isSyncing && "animate-spin")} />
+              {isSyncing ? "Sincronizando..." : "Actualizar"}
+            </button>
           </div>
         </div>
-      </aside>
-    </>
+      </div>
+
+      {/* Contenido con Scroll */}
+      <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-5 text-sm custom-scrollbar">
+        {/* Buscador Rápido por Número de Edición */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <Search className="h-3.5 w-3.5 text-blue-600" />
+            Buscar N° de Edición
+          </label>
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="Ej: 6173, 5988, 5545..."
+              value={editionInput}
+              onChange={(e) => handleEditionSearch(e.target.value)}
+              className="h-8 text-xs pr-7 bg-muted/40 font-mono"
+            />
+            {editionInput && (
+              <button
+                onClick={() => handleEditionSearch("")}
+                className="absolute right-2 top-2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Filtro Principal por Año (2024, 2025, 2026) */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-blue-600" />
+              Año de Publicación
+            </span>
+            {boletinFilter.year !== "all" && (
+              <button
+                onClick={() => handleYearChange("all")}
+                className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-medium"
+              >
+                Ver todos
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-1.5">
+            <Button
+              variant={boletinFilter.year === "all" ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleYearChange("all")}
+              className={cn(
+                "h-8 text-xs justify-between px-2.5",
+                boletinFilter.year === "all" && "bg-blue-600 text-white hover:bg-blue-700"
+              )}
+            >
+              <span>Todos los años</span>
+              <span className="font-mono text-[10px] opacity-80">{totalEditions}</span>
+            </Button>
+
+            <Button
+              variant={boletinFilter.year === 2026 ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleYearChange(2026)}
+              className={cn(
+                "h-8 text-xs justify-between px-2.5",
+                boletinFilter.year === 2026 && "bg-blue-600 text-white hover:bg-blue-700"
+              )}
+            >
+              <span className="font-semibold">Año 2026</span>
+              <span className="font-mono text-[10px] opacity-80">{yearCounts[2026] || 218}</span>
+            </Button>
+
+            <Button
+              variant={boletinFilter.year === 2025 ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleYearChange(2025)}
+              className={cn(
+                "h-8 text-xs justify-between px-2.5",
+                boletinFilter.year === 2025 && "bg-blue-600 text-white hover:bg-blue-700"
+              )}
+            >
+              <span>Año 2025</span>
+              <span className="font-mono text-[10px] opacity-80">{yearCounts[2025] || 236}</span>
+            </Button>
+
+            <Button
+              variant={boletinFilter.year === 2024 ? "default" : "outline"}
+              size="sm"
+              onClick={() => handleYearChange(2024)}
+              className={cn(
+                "h-8 text-xs justify-between px-2.5",
+                boletinFilter.year === 2024 && "bg-blue-600 text-white hover:bg-blue-700"
+              )}
+            >
+              <span>Año 2024</span>
+              <span className="font-mono text-[10px] opacity-80">{yearCounts[2024] || 199}</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Filtro por Mes de Publicación */}
+        <div className="space-y-2">
+          <button
+            onClick={() => setIsMonthsOpen(!isMonthsOpen)}
+            className="w-full flex items-center justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground"
+          >
+            <span className="flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-blue-600" />
+              Mes de Edición
+              {boletinFilter.month !== "all" && (
+                <Badge variant="secondary" className="text-[10px] h-4 px-1 ml-1 bg-blue-100 dark:bg-blue-900/60 text-blue-800 dark:text-blue-300">
+                  {MONTHS_LIST.find((m) => m.id === boletinFilter.month)?.name}
+                </Badge>
+              )}
+            </span>
+            {isMonthsOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+          </button>
+
+          {isMonthsOpen && (
+            <div className="grid grid-cols-4 gap-1 pt-1">
+              {MONTHS_LIST.map((m) => {
+                const isSelected = boletinFilter.month === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    onClick={() => handleMonthChange(m.id)}
+                    className={cn(
+                      "px-1.5 py-1 text-[11px] font-medium rounded-md text-center transition-colors border",
+                      isSelected
+                        ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                        : "bg-background/60 hover:bg-muted text-muted-foreground hover:text-foreground border-border/60"
+                    )}
+                  >
+                    {m.short}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Tipo de Edición: Ordinaria / Separata */}
+        <div className="space-y-1.5">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+            <FileStack className="h-3.5 w-3.5 text-blue-600" />
+            Tipo de Publicación
+          </span>
+          <div className="grid grid-cols-3 gap-1">
+            <button
+              onClick={() => handleTypeChange("all")}
+              className={cn(
+                "py-1 px-1.5 text-[11px] rounded border font-medium text-center",
+                (!boletinFilter.isSeparata || boletinFilter.isSeparata === "all")
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-muted/40 text-muted-foreground border-border hover:bg-muted"
+              )}
+            >
+              Todas
+            </button>
+            <button
+              onClick={() => handleTypeChange(false)}
+              className={cn(
+                "py-1 px-1.5 text-[11px] rounded border font-medium text-center",
+                boletinFilter.isSeparata === false
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-muted/40 text-muted-foreground border-border hover:bg-muted"
+              )}
+            >
+              Ordinarias
+            </button>
+            <button
+              onClick={() => handleTypeChange(true)}
+              className={cn(
+                "py-1 px-1.5 text-[11px] rounded border font-medium text-center",
+                boletinFilter.isSeparata === true
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-muted/40 text-muted-foreground border-border hover:bg-muted"
+              )}
+            >
+              Separatas
+            </button>
+          </div>
+        </div>
+
+        {/* Ejes Temáticos del Sumario */}
+        <div className="space-y-2">
+          <button
+            onClick={() => setIsThematicOpen(!isThematicOpen)}
+            className="w-full flex items-center justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground"
+          >
+            <span className="flex items-center gap-1.5">
+              <Layers className="h-3.5 w-3.5 text-blue-600" />
+              Ejes Temáticos del Sumario
+            </span>
+            {isThematicOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+          </button>
+
+          {isThematicOpen && (
+            <div className="space-y-1 pt-1">
+              {THEMATIC_AREAS.map((topic) => {
+                const isSelected = boletinFilter.topic === topic.id;
+                return (
+                  <button
+                    key={topic.id}
+                    onClick={() => handleTopicChange(topic.id)}
+                    className={cn(
+                      "w-full text-left px-2.5 py-1.5 text-xs rounded-md transition-colors flex items-center justify-between border",
+                      isSelected
+                        ? "bg-blue-600 text-white font-medium border-blue-600"
+                        : "bg-transparent hover:bg-muted/60 text-muted-foreground hover:text-foreground border-transparent"
+                    )}
+                  >
+                    <span className="truncate">{topic.shortLabel || topic.label}</span>
+                    {isSelected && <CheckCircle2 className="h-3 w-3 shrink-0 ml-1 text-white" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Botón Reset de Filtros si hay alguno activo */}
+        {activeFiltersCount > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleResetFilters}
+            className="w-full text-xs h-8 text-muted-foreground hover:text-foreground border-dashed"
+          >
+            <X className="h-3.5 w-3.5 mr-1" />
+            Limpiar filtros activos ({activeFiltersCount})
+          </Button>
+        )}
+      </div>
+
+      {/* Pie de Página Institucional */}
+      <div className="p-3 border-t border-border bg-muted/20 text-xs flex flex-col gap-1.5">
+        <a
+          href="https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-between text-[11px] text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+        >
+          <span className="flex items-center gap-1">
+            <HardDrive className="h-3.5 w-3.5 text-blue-600" />
+            Google Drive Oficial TDF
+          </span>
+          <ExternalLink className="h-3 w-3" />
+        </a>
+        <p className="text-[10px] text-muted-foreground/70">
+          Boletín Oficial de Tierra del Fuego • Sistema Digital
+        </p>
+      </div>
+    </aside>
   );
 }

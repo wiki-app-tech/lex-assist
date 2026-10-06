@@ -16,12 +16,12 @@ const lora = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "lex-assist | Asistente de Lectura y Resumen Normativo TDF",
+  title: "Boletín Oficial de Tierra del Fuego, AeIAS — Ediciones y Sumarios 2024-2026",
   description:
-    "Consulta, lectura y resumen inteligente de Boletines Oficiales, leyes, decretos y biblioteca judicial de Tierra del Fuego, Argentina.",
+    "Portal oficial de consulta, búsqueda estructurada por año (2024, 2025, 2026), mes y número de edición, con sumarios analíticos y descarga PDF del Gobierno de Tierra del Fuego, Antártida e Islas del Atlántico Sur.",
   icons: {
-    icon: "/logo.png",
-    shortcut: "/logo.png",
+    icon: "/icon.png",
+    shortcut: "/icon.png",
     apple: "/apple-icon.png",
   },
 };

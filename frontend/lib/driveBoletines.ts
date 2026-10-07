@@ -122,6 +122,31 @@ export const THEMATIC_AREAS = [
   },
 ];
 
+export const DRIVE_OCTOBER_2026_URL =
+  "https://drive.google.com/drive/folders/1EeNy3W0yKZzX9c1hXfwBKZDvLEIVJAdk?usp=drive_link";
+export const DRIVE_HISTORIC_ROOT_URL =
+  "https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6";
+
+// Helper to get the Google Drive folder URL for the bulletin's month
+export function getDriveMonthFolderUrl(doc?: {
+  month?: number | string;
+  monthName?: string;
+  year?: number;
+  date?: string;
+} | null): string {
+  if (!doc) return DRIVE_OCTOBER_2026_URL;
+  const m = typeof doc.month === "number" ? doc.month : (typeof doc.month === "string" ? parseInt(doc.month, 10) : undefined);
+  const name = (doc.monthName || "").toLowerCase();
+  const d = (doc.date || "").toLowerCase();
+
+  // Si es Octubre (o mes 10)
+  if (m === 10 || name.includes("octubre") || d.includes("octubre") || d.includes("/10/") || d.includes("-10-")) {
+    return DRIVE_OCTOBER_2026_URL;
+  }
+
+  return DRIVE_HISTORIC_ROOT_URL;
+}
+
 // Helper to extract Drive file ID from drive_url for embedding iframe preview
 export function getDriveFileId(driveUrl?: string): string | null {
   if (!driveUrl) return null;

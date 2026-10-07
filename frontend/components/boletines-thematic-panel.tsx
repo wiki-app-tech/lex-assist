@@ -47,7 +47,7 @@ import {
   DRIVE_BOLETINES_DOCUMENTS,
   THEMATIC_AREAS,
   POLICIA_SECURITY_CASES,
-  getDriveEmbedUrl,
+  getDriveMonthFolderUrl,
 } from "@/lib/driveBoletines";
 import type { BoletinFilterState } from "@/components/sidebar";
 
@@ -904,6 +904,19 @@ export function BoletinesThematicPanel({
               </div>
 
               <div className="flex items-center space-x-2 shrink-0">
+                <Button
+                  variant="default"
+                  size="sm"
+                  asChild
+                  className="h-8 text-xs bg-cyan-700 hover:bg-cyan-800 text-white font-medium"
+                >
+                  <a href={getDriveMonthFolderUrl(previewDoc)} target="_blank" rel="noopener noreferrer">
+                    <HardDrive className="h-3.5 w-3.5 mr-1 text-cyan-200" />
+                    Carpeta {previewDoc.monthName || "Octubre"} en Drive
+                    <ExternalLink className="h-3 w-3 ml-1 opacity-80" />
+                  </a>
+                </Button>
+
                 {previewDoc.driveUrl && (
                   <Button
                     variant="outline"
@@ -913,7 +926,7 @@ export function BoletinesThematicPanel({
                   >
                     <a href={previewDoc.driveUrl} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="h-3.5 w-3.5 mr-1" />
-                      Abrir en Drive
+                      Archivo en Drive
                     </a>
                   </Button>
                 )}
@@ -938,30 +951,41 @@ export function BoletinesThematicPanel({
               </div>
             </div>
 
-            {/* Modal Content: Embedded Google Drive PDF Viewer */}
-            <div className="flex-1 bg-muted/20 relative overflow-hidden">
-              {getDriveEmbedUrl(previewDoc.driveUrl) ? (
-                <iframe
-                  src={getDriveEmbedUrl(previewDoc.driveUrl)!}
-                  title={`Visor PDF ${previewDoc.title}`}
-                  className="w-full h-full border-0"
-                  allow="autoplay"
-                />
-              ) : (
-                <div className="p-8 text-center space-y-3">
-                  <FileText className="h-10 w-10 mx-auto text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">
-                    El documento puede ser visualizado y descargado directamente desde el enlace oficial de Google Drive.
+            {/* Modal Content: Acceso Directo Oficial sin iframe pesado */}
+            <div className="flex-1 bg-muted/20 p-6 sm:p-8 flex items-center justify-center overflow-y-auto">
+              <div className="max-w-xl w-full bg-card p-6 rounded-2xl border border-border shadow-lg space-y-5 text-center">
+                <div className="h-14 w-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400 mx-auto flex items-center justify-center shadow-inner">
+                  <HardDrive className="h-7 w-7" />
+                </div>
+
+                <div className="space-y-2">
+                  <h4 className="font-serif font-bold text-lg text-foreground">
+                    {previewDoc.title}
+                  </h4>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Edición oficial de {previewDoc.date} ({previewDoc.pageCount ? `${previewDoc.pageCount} páginas` : "Edición Oficial"}). Debido a la gran extensión de los ejemplares de la provincia (+100 MB), los documentos originales se consultan directamente en Google Drive sin límites de carga.
                   </p>
-                  {previewDoc.driveUrl && (
-                    <Button asChild size="sm">
-                      <a href={previewDoc.driveUrl} target="_blank" rel="noopener noreferrer">
-                        Abrir PDF en Google Drive
+                </div>
+
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2.5">
+                  <Button asChild size="default" className="w-full sm:w-auto bg-cyan-700 hover:bg-cyan-800 text-white font-medium">
+                    <a href={getDriveMonthFolderUrl(previewDoc)} target="_blank" rel="noopener noreferrer">
+                      <HardDrive className="h-4 w-4 mr-2 text-cyan-200" />
+                      Abrir Carpeta {previewDoc.monthName || "Octubre"} en Google Drive
+                      <ExternalLink className="h-3.5 w-3.5 ml-1.5 opacity-80" />
+                    </a>
+                  </Button>
+
+                  {previewDoc.downloadUrl && (
+                    <Button variant="outline" asChild size="default" className="w-full sm:w-auto">
+                      <a href={previewDoc.downloadUrl} target="_blank" rel="noopener noreferrer">
+                        <FileDown className="h-4 w-4 mr-2" />
+                        Descargar PDF
                       </a>
                     </Button>
                   )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>

@@ -30,7 +30,7 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import type { DocumentItem } from "@/components/document-list";
-import { getDriveEmbedUrl } from "@/lib/driveBoletines";
+import { getDriveMonthFolderUrl } from "@/lib/driveBoletines";
 
 interface DocumentReaderProps {
   document: DocumentItem | null;
@@ -40,7 +40,7 @@ interface DocumentReaderProps {
 export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) {
   const [copied, setCopied] = React.useState(false);
   const [fontSize, setFontSize] = React.useState<"normal" | "large" | "xlarge">("normal");
-  const [activeTab, setActiveTab] = React.useState<"sumario" | "pdf_visor" | "texto">("sumario");
+  const [activeTab, setActiveTab] = React.useState<"sumario" | "texto">("sumario");
   const [textFilter, setTextFilter] = React.useState("");
 
   // Reiniciar a la pestaña del Sumario al cambiar de documento
@@ -86,7 +86,7 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
     }
   };
 
-  const embedUrl = getDriveEmbedUrl(document.driveUrl || document.sourceUrl);
+  const monthFolderUrl = getDriveMonthFolderUrl(document);
   const acts = document.sumarioActs || [];
 
   return (
@@ -126,7 +126,7 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
 
         {/* Pestañas de Vista y Acciones */}
         <div className="flex items-center space-x-1.5 sm:space-x-2">
-          {/* Selector de Pestañas */}
+          {/* Selector de Pestañas: Sumario y Texto */}
           <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border/80">
             <button
               onClick={() => setActiveTab("sumario")}
@@ -139,18 +139,6 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
             >
               <FileCheck2 className="h-3.5 w-3.5 text-blue-600" />
               <span>Sumario</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("pdf_visor")}
-              className={cn(
-                "px-2.5 py-1 text-xs font-medium rounded-md transition-all flex items-center gap-1",
-                activeTab === "pdf_visor"
-                  ? "bg-background text-foreground shadow-xs font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <HardDrive className="h-3.5 w-3.5 text-cyan-600" />
-              <span>Visor PDF</span>
             </button>
             <button
               onClick={() => setActiveTab("texto")}
@@ -166,13 +154,28 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
             </button>
           </div>
 
+          {/* Botón Acceso a la Carpeta de Google Drive del Mes */}
+          <Button
+            variant="default"
+            size="sm"
+            asChild
+            className="h-8 text-xs bg-cyan-700 hover:bg-cyan-800 text-white font-medium shadow-xs"
+            title={`Abrir carpeta de ${document.monthName || "Octubre"} en Google Drive`}
+          >
+            <a href={monthFolderUrl} target="_blank" rel="noopener noreferrer">
+              <HardDrive className="h-3.5 w-3.5 mr-1 text-cyan-200" />
+              <span>Drive ({document.monthName || "Octubre"})</span>
+              <ExternalLink className="h-3 w-3 ml-1 opacity-80" />
+            </a>
+          </Button>
+
           {/* Botón Descargar PDF */}
           {document.pdfUrl && (
             <Button
-              variant="default"
+              variant="outline"
               size="sm"
               asChild
-              className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium shadow-xs"
+              className="h-8 text-xs border-blue-600/30 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40"
             >
               <a href={document.pdfUrl} target="_blank" rel="noopener noreferrer">
                 <FileDown className="h-3.5 w-3.5 mr-1" />
@@ -204,46 +207,8 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
         </div>
       </div>
 
-      {/* Contenido según la pestaña activa */}
-      {activeTab === "pdf_visor" ? (
-        /* Pestaña: Visor PDF Oficial (Google Drive Embed) */
-        <div className="flex-1 flex flex-col h-full p-3 sm:p-4 space-y-2 bg-muted/20 overflow-hidden">
-          <div className="flex items-center justify-between text-xs bg-card p-2.5 rounded-lg border border-border shadow-xs">
-            <span className="font-semibold text-foreground flex items-center gap-2 truncate">
-              <HardDrive className="h-4 w-4 text-cyan-600 shrink-0" />
-              <span className="truncate">{document.title}</span>
-            </span>
-            <div className="flex items-center gap-2 shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                asChild
-                className="h-7 text-xs"
-              >
-                <a href={document.driveUrl} target="_blank" rel="noopener noreferrer">
-                  <ExternalLink className="h-3 w-3 mr-1" />
-                  Abrir en Google Drive
-                </a>
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex-1 rounded-lg border border-border overflow-hidden bg-white shadow-sm flex flex-col">
-            {embedUrl ? (
-              <iframe
-                src={embedUrl}
-                title={`Visor Oficial - ${document.title}`}
-                className="w-full h-full border-0"
-                allow="autoplay"
-              />
-            ) : (
-              <div className="flex-1 flex items-center justify-center p-8 text-center text-muted-foreground">
-                <p>No se pudo generar la vista previa embebida. Puedes abrirlo directamente en Google Drive.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : activeTab === "texto" ? (
+      {/* Contenido según la pestaña activa (Texto o Sumario) */}
+      {activeTab === "texto" ? (
         /* Pestaña: Texto Completo / Extracto */
         <div className="flex-1 flex flex-col h-full overflow-hidden">
           <div className="p-3 border-b border-border bg-muted/20 flex items-center justify-between gap-3 text-xs">
@@ -403,24 +368,27 @@ export function DocumentReader({ document, onBackMobile }: DocumentReaderProps) 
               </div>
             )}
 
-            {/* Accesos Directos al Documento */}
+            {/* Accesos Directos al Documento y Carpeta de Google Drive */}
             <div className="p-4 rounded-xl border border-border bg-muted/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
               <div>
                 <p className="font-semibold text-foreground">
-                  Documento Original Digitalizado
+                  Repositorio Oficial en Google Drive
                 </p>
                 <p className="text-muted-foreground text-[11px]">
-                  Disponible para lectura interactiva o descarga completa en formato PDF.
+                  Accede a la carpeta oficial de {document.monthName || "Octubre"} en Google Drive para consultar y descargar los archivos originales.
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Button
                   size="sm"
-                  onClick={() => setActiveTab("pdf_visor")}
-                  className="h-8 text-xs bg-cyan-600 hover:bg-cyan-700 text-white font-medium"
+                  asChild
+                  className="h-8 text-xs bg-cyan-700 hover:bg-cyan-800 text-white font-medium shadow-xs"
                 >
-                  <HardDrive className="h-3.5 w-3.5 mr-1" />
-                  Abrir en Visor PDF
+                  <a href={monthFolderUrl} target="_blank" rel="noopener noreferrer">
+                    <HardDrive className="h-3.5 w-3.5 mr-1 text-cyan-200" />
+                    Abrir Carpeta {document.monthName || "Octubre"} (Drive)
+                    <ExternalLink className="h-3 w-3 ml-1 opacity-80" />
+                  </a>
                 </Button>
                 {document.pdfUrl && (
                   <Button

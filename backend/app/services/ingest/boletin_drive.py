@@ -115,6 +115,11 @@ class BoletinDriveService:
             "https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6",
         )
         self.folder_id: str = self.config.get("folder_id", "12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6")
+        self.latest_folder_url: str = self.config.get(
+            "latest_folder_url",
+            "https://drive.google.com/drive/folders/1EeNy3W0yKZzX9c1hXfwBKZDvLEIVJAdk?usp=drive_link",
+        )
+        self.latest_folder_id: str = self.config.get("latest_folder_id", "1EeNy3W0yKZzX9c1hXfwBKZDvLEIVJAdk")
 
         storage_cfg = self.config.get("storage", {})
         self.download_dir = Path(storage_cfg.get("download_dir", "data/boletines_drive"))
@@ -171,22 +176,22 @@ class BoletinDriveService:
     # 1. Descarga desde Google Drive con gdown
     # =========================================================================
 
-    def download_drive_folder(self, output_dir: Path | str | None = None) -> list[Path]:
+    def download_drive_folder(self, folder_url: str | None = None, output_dir: Path | str | None = None) -> list[Path]:
         """
         Descarga recursivamente todos los archivos de la carpeta pública de Google Drive
         al directorio local especificado. Retorna la lista de rutas a los PDFs descargados.
         """
         target_dir = Path(output_dir) if output_dir else self.download_dir
         target_dir.mkdir(parents=True, exist_ok=True)
+        url_to_download = folder_url or self.latest_folder_url or self.folder_url
 
-        logger.info("Iniciando descarga desde Google Drive: %s -> %s", self.folder_url, target_dir)
+        logger.info("Iniciando descarga desde Google Drive: %s -> %s", url_to_download, target_dir)
         try:
             gdown.download_folder(
-                url=self.folder_url,
+                url=url_to_download,
                 output=str(target_dir),
                 quiet=False,
                 use_cookies=False,
-                remaining_ok=True,
             )
         except Exception as exc:
             logger.error("Error durante la descarga con gdown: %s", exc)

@@ -442,16 +442,27 @@ export function Sidebar({
       {/* Pie de Página Institucional */}
       <div className="p-3 border-t border-border bg-muted/20 text-xs flex flex-col gap-1.5">
         <a
-          href="https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6"
+          href="https://drive.google.com/drive/folders/1EeNy3W0yKZzX9c1hXfwBKZDvLEIVJAdk?usp=drive_link"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center justify-between text-[11px] text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          title="Abrir carpeta con los últimos Boletines Oficiales (Octubre 2026)"
         >
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1 font-medium text-foreground/80">
             <HardDrive className="h-3.5 w-3.5 text-blue-600" />
-            Google Drive Oficial TDF
+            Últimos Boletines (Drive)
           </span>
           <ExternalLink className="h-3 w-3" />
+        </a>
+        <a
+          href="https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-between text-[10px] text-muted-foreground hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+          title="Repositorio histórico general"
+        >
+          <span>Archivo General (Drive)</span>
+          <ExternalLink className="h-2.5 w-2.5" />
         </a>
         <p className="text-[10px] text-muted-foreground/70">
           Boletín Oficial de Tierra del Fuego • Sistema Digital

@@ -8,6 +8,8 @@ description: "Ediciones oficiales completas descargadas desde la carpeta públic
 jurisdiction: "AR-V" # ISO 3166-2:AR para Tierra del Fuego
 folder_url: "https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6"
 folder_id: "12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6"
+latest_folder_url: "https://drive.google.com/drive/folders/1EeNy3W0yKZzX9c1hXfwBKZDvLEIVJAdk?usp=drive_link"
+latest_folder_id: "1EeNy3W0yKZzX9c1hXfwBKZDvLEIVJAdk"
 base_url: "https://drive.google.com"
 parser_type: "pdf_drive_whoosh"
 

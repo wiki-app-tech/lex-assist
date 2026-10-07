@@ -361,7 +361,7 @@ export function BoletinesThematicPanel({
               title="Abrir carpeta oficial en Google Drive"
             >
               <a
-                href="https://drive.google.com/drive/folders/12GrKybtm4cWyS6Ib_DnbwKAQ6JvQHCU6"
+                href="https://drive.google.com/drive/folders/1EeNy3W0yKZzX9c1hXfwBKZDvLEIVJAdk?usp=drive_link"
                 target="_blank"
                 rel="noopener noreferrer"
               >

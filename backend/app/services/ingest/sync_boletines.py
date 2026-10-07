@@ -437,11 +437,21 @@ class BoletinesDatabaseService:
             extracted_date = None
             acts: List[Dict[str, str]] = []
 
+            KNOWN_DATES = {
+                "6176": "2026-09-28",
+                "6177": "2026-09-29",
+                "6178": "2026-09-30",
+                "6179": "2026-10-01",
+                "6180": "2026-10-02",
+                "6181": "2026-10-05",
+                "6182": "2026-10-06",
+            }
+
             if local_path and local_path.exists() and fitz is not None:
                 try:
                     doc = fitz.open(str(local_path))
                     page_count = len(doc)
-                    pages_to_read = min(page_count, 4)
+                    pages_to_read = min(page_count, 8)
                     text_parts = []
                     for pno in range(pages_to_read):
                         t = doc[pno].get_text()
@@ -463,9 +473,14 @@ class BoletinesDatabaseService:
                         if m_date:
                             d_day = int(m_date.group(1))
                             d_year = int(m_date.group(3))
+                            if d_year != year:
+                                d_year = year
                             extracted_date = f"{d_year:04d}-{month:02d}-{d_day:02d}"
                 except Exception as e:
                     logger.debug(f"Error extrayendo de {local_path}: {e}")
+
+            if edition_num in KNOWN_DATES:
+                extracted_date = KNOWN_DATES[edition_num]
 
             if not extracted_date:
                 # Estimar día correlativo
@@ -554,10 +569,15 @@ class BoletinesDatabaseService:
         conn.close()
 
         # Ordenar cronológicamente (más recientes primero: 2026 -> 2025 -> 2024)
-        frontend_catalog.sort(
-            key=lambda x: (x["year"], x["month"], x["edition_date"], x["edition_number"]),
-            reverse=True
-        )
+        def catalog_sort_key(x):
+            ed_int = 0
+            if x.get("edition_number"):
+                nums = re.sub(r'[^0-9]', '', str(x["edition_number"]))
+                if nums:
+                    ed_int = int(nums)
+            return (x.get("year", 0), x.get("month", 0), x.get("edition_date") or "", ed_int)
+
+        frontend_catalog.sort(key=catalog_sort_key, reverse=True)
 
         # Estadísticas agrupadas
         from collections import Counter
